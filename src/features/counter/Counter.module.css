@@ -1,3 +1,5 @@
+
+
 .row {
   display: flex;
   align-items: center;
@@ -30,6 +32,25 @@
   border: 2px solid transparent;
   color: rgb(112, 76, 182);
   padding-bottom: 4px;
+  cursor: pointer;
+  background-color: rgba(112, 76, 182, 0.1);
+  border-radius: 2px;
+  transition: all 0.15s;
+}
+
+.buttonMonospace {
+  appearance: none;
+  background: none;
+  font-size: 2rem;
+  width:4rem;
+  padding-left: 0.2rem;
+  padding-right: 0.2rem;
+  margin:0.4rem 0.3rem;
+
+
+  outline: none;
+  border: 2px solid transparent;
+  color: rgb(112, 76, 182);
   cursor: pointer;
   background-color: rgba(112, 76, 182, 0.1);
   border-radius: 2px;
