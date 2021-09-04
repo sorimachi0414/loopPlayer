@@ -3,30 +3,14 @@ import { fetchCount } from './counterAPI';
 import * as Tone from 'tone'
 import music from './music2.mp3';
 import {useDispatch} from "react-redux"; //tempo 113
-
-//Tone.js
-let musicLength=0
-let tempo,note4n,note1m,note2m,numberOf4n
-
-let musicOnLoad=()=>{
-  musicLength = player.buffer.duration
-  tempo=113
-  note4n = 60/tempo
-  note1m = 4*60/tempo
-  note2m = 2*4*60/tempo
-  numberOf4n=Math.ceil(musicLength*tempo/60)
-  console.log(numberOf4n)
-  console.log(player.buffer.duration)
-}
-
-const player = new Tone.Player(music,()=>musicOnLoad()).toDestination();
-
-//player.setLoopPoints(0, note2m);
-player.loop = true;
-player.autostart = false;
+//import {player} from "./Counter"
 
 const initialState = {
+  loaded:0,
   value: 0,
+  bpm:120,
+  wait:0,
+  expand:1.0,
   status: 'idle',
   audioLength:0,
   numberOf4n:3,
@@ -52,31 +36,33 @@ export const counterSlice = createSlice({
   initialState,
   // The `reducers` field lets us define reducers and generate associated actions
   reducers: {
-    build:(state)=>{
-      state.numberOf4n = numberOf4n
+    initPlayer:(state)=>{
+
+    },
+    build:(state,action)=>{
+      state.numberOf4n = action.payload
+      state.loaded=1
     },
     playThis:(state,action)=>{
       let i = action.payload.i
-      player.setLoopPoints(note4n*i, note4n*(i+1));
-      player.start()
+      let note4n=0.2
+      //player.setLoopPoints(note4n*i, note4n*(i+1));
+      //player.start()
     },
 
     playFull:(state)=>{
-      player.setLoopPoints(0, note4n);
-      player.start()
+      //player.setLoopPoints(0, note4n);
+      //player.start()
     },
-    play2nd:(state)=>{
-      player.stop()
-      player.setLoopPoints(note4n, note4n*2);
-      player.start()
+    changeBpm:(state,action)=>{
+      state.bpm=action.payload
     },
-    play3rd:(state)=>{
-      player.stop()
-      player.setLoopPoints(note4n*2, note4n*3);
-      player.start()
+    changeWait:(state,action)=>{
+      state.wait=action.payload
     },
-
-
+    changeExpand:(state,action)=>{
+      state.expand=action.payload
+    },
 
     increment: (state) => {
       // Redux Toolkit allows us to write "mutating" logic in reducers. It
@@ -107,7 +93,18 @@ export const counterSlice = createSlice({
   },
 });
 
-export const { increment, decrement, incrementByAmount,playFull,play2nd,play3rd,build,playThis } = counterSlice.actions;
+export const {
+  increment,
+  decrement,
+  incrementByAmount,
+  initPlayer,
+  playFull,
+  build,
+  playThis,
+  changeBpm,
+  changeWait,
+  changeExpand,
+} = counterSlice.actions;
 
 // The function below is called a selector and allows us to select a value from
 // the state. Selectors can also be defined inline where they're used instead of
@@ -118,6 +115,7 @@ export const select4n = (state) => state.counter.numberOf4n;
 // We can also write thunks by hand, which may contain both sync and async logic.
 // Here's an example of conditionally dispatching actions based on current state.
 export const incrementIfOdd = (amount) => (dispatch, getState) => {
+  console.log('uncre')
   const currentValue = selectCount(getState());
   if (currentValue % 2 === 1) {
     dispatch(incrementByAmount(amount));
