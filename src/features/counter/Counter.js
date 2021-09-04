@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
+import { useEffect } from "react";
+
 import {
   playFull,
   build,
@@ -12,13 +14,13 @@ import {
   selectCount,
   select4n,
   playThis, counterSlice,
+  shiftActivePosition,
 } from './counterSlice';
 import styles from './Counter.module.css';
-import * as Tone from 'tone'
-import music from "./music2.mp3";
+import {useKey} from 'react-use';
+
 
 //export let player
-
 export function Counter() {
 
   const rowLength=8
@@ -27,43 +29,22 @@ export function Counter() {
   const bpm=useSelector((state) => state.counter.bpm)
   const wait = useSelector((state) => state.counter.wait)
   const expand = useSelector((state) => state.counter.expand)
-  const numberOf4n = useSelector(select4n);
+  //const numberOf4n = useSelector(select4n);
+  const numberOf4n = useSelector((state) => state.counter.numberOf4n)
+  const activePosition = useSelector((state) => state.counter.activePosition)
   const dispatch = useDispatch();
-  const [incrementAmount,setIncrementAmount] = useState();
+
+  const [incrementAmount,setIncrementAmount,keyPosition,setKeyPosition] = useState(0);
 
   const incrementValue = Number(incrementAmount) || 0;
-
-  //Tone.js------------------------------
-  let musicLength=0
-  let tempo,note4n,note1m,note2m
-
-  if(loaded==0){
-    let musicOnLoad=()=>{
-      console.log(player.loaded)
-      console.log('loaded')
-
-      musicLength = player.buffer.duration
-      tempo=bpm
-      note4n = 60/tempo
-      note1m = 4*60/tempo
-      note2m = 2*4*60/tempo
-      let numberOf4n=Math.ceil(musicLength*tempo/60)
-      console.log(numberOf4n)
-      dispatch(build(numberOf4n))
-    }
-    const player = new Tone.Player(music,()=>musicOnLoad()).toDestination();
-    player.loop = true;
-    player.autostart = false;
-  }
-
-  //------------
+  let keyPositionValue = Number(keyPosition) || 0;
 
   let button4n=[]
   for(let i=0;i<numberOf4n;i++){
     button4n.push(
       <button
         className={styles.buttonMonospace}
-        onClick={()=>dispatch(playThis({i}))}
+        onClick={()=>dispatch(playThis(i))}
       >{i+1}</button>
     )
   }
@@ -83,6 +64,37 @@ export function Counter() {
       <div>{each}</div>
     )
   }
+
+  useEffect(() => {
+    document.addEventListener('keydown', handleKeyDown);
+    document.addEventListener('keyup', handleKeyUp);
+    return function cleanup() {
+      document.removeEventListener('keydown', handleKeyDown);
+      document.removeEventListener('keyup', handleKeyUp);
+    };
+  });
+
+  const handleKeyDown = (event) => {
+    console.debug("Key event", event);
+    if (event.code=='Space') {
+      dispatch(playThis(activePosition))
+    }else if (event.code=='ArrowRight') {
+      dispatch(playThis(activePosition+1))
+      dispatch(shiftActivePosition(activePosition + 1))
+    }else if (event.code=='ArrowLeft') {
+      dispatch(playThis(activePosition-1))
+      dispatch(shiftActivePosition(activePosition - 1))
+    }
+    //dispatch(handleKeyInput(game_state, connection_status, event.key));
+    document.removeEventListener('keydown', handleKeyDown);
+    event.preventDefault()
+  };
+
+  const handleKeyUp = (event) => {
+    console.log(1)
+    document.addEventListener('keydown', handleKeyDown, {once: true});
+    event.preventDefault()
+  };
 
   return (
     <div>

@@ -1,14 +1,19 @@
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
 import { fetchCount } from './counterAPI';
+import {player} from '../../index'
+
+
 import * as Tone from 'tone'
 import music from './music2.mp3';
 import {useDispatch} from "react-redux"; //tempo 113
 //import {player} from "./Counter"
-
+//my-app/src/features/counter/counterSlice.js
+//my-app/src/index.js
 const initialState = {
+  activePosition:0,
   loaded:0,
   value: 0,
-  bpm:120,
+  bpm:113,
   wait:0,
   expand:1.0,
   status: 'idle',
@@ -40,14 +45,15 @@ export const counterSlice = createSlice({
 
     },
     build:(state,action)=>{
-      state.numberOf4n = action.payload
+      state.musicLength = action.payload
+      state.numberOf4n = Math.ceil(action.payload * state.bpm /60)
       state.loaded=1
     },
     playThis:(state,action)=>{
-      let i = action.payload.i
-      let note4n=0.2
-      //player.setLoopPoints(note4n*i, note4n*(i+1));
-      //player.start()
+      let i = action.payload
+      let note4n=state.musicLength/state.numberOf4n
+      player.setLoopPoints(note4n*i, note4n*(i+1));
+      player.start()
     },
 
     playFull:(state)=>{
@@ -55,13 +61,17 @@ export const counterSlice = createSlice({
       //player.start()
     },
     changeBpm:(state,action)=>{
-      state.bpm=action.payload
+      state.bpm=Number(action.payload)
+      state.numberOf4n = Math.ceil(state.musicLength * state.bpm /60)
     },
     changeWait:(state,action)=>{
       state.wait=action.payload
     },
     changeExpand:(state,action)=>{
       state.expand=action.payload
+    },
+    shiftActivePosition:(state,action)=>{
+      state.activePosition=action.payload
     },
 
     increment: (state) => {
@@ -104,6 +114,7 @@ export const {
   changeBpm,
   changeWait,
   changeExpand,
+  shiftActivePosition,
 } = counterSlice.actions;
 
 // The function below is called a selector and allows us to select a value from
