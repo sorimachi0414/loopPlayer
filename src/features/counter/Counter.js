@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { useEffect } from "react";
+import {toNoteString} from '../../index'
 
 import {
   playFull,
@@ -15,6 +16,8 @@ import {
   select4n,
   playThis, counterSlice,
   shiftActivePosition,
+  shiftQuarterNote,
+  playToneBySoft,
 } from './counterSlice';
 import styles from './Counter.module.css';
 import {useKey} from 'react-use';
@@ -31,6 +34,7 @@ export function Counter() {
   const expand = useSelector((state) => state.counter.expand)
   const numberOf4n = useSelector((state) => state.counter.numberOf4n)
   const activePosition = useSelector((state) => state.counter.activePosition)
+  const quarterNotes = useSelector((state) => state.counter.quarterNotes)
   const dispatch = useDispatch();
 
   const [incrementAmount,setIncrementAmount,keyPosition,setKeyPosition] = useState(0);
@@ -42,31 +46,52 @@ export function Counter() {
 
   let button4n=[]
   for(let i=0;i<numberOf4n;i++){
+    //Block Loop
     if (i%(rowLength)==0){
      button4n.push(
-       <button
-         className={styles.buttonMiniLoop}
-         onClick={()=>dispatch(
-           playThis({a:i,b:i+rowLength})
-             )
-         }
-       >↺8</button>
+       <div className={styles.quarterNoteBox}>
+         <button
+           className={styles.buttonMiniLoop}
+           onClick={()=>dispatch(
+             playThis({a:i,b:i+rowLength})
+               )
+           }
+         >↺<br />8</button>
+       </div>
      )
     }
+    //Block loop
     if(i%(rowLength)==0 || i%(rowLength/2)==0){
       button4n.push(
-        <button
-          className={styles.buttonMiniLoop}
-          onClick={()=>dispatch(playThis({a:i,b:i+rowLength/2}))}
-        >↺4</button>
+        <div className={styles.quarterNoteBox}>
+          <button
+            className={styles.buttonMiniLoop}
+            onClick={()=>dispatch(playThis({a:i,b:i+rowLength/2}))}
+          >↺<br />4</button>
+        </div>
       )
     }
+
+    //Quarter Note
     let buttonClass = (activePosition==i) ? styles.buttonActive: styles.buttonMonospace
     button4n.push(
-      <button
-        className={buttonClass}
-        onClick={()=>dispatch(playThis({a:i,b:i+1}))}
-      >{i+1}</button>
+      <div className={styles.quarterNoteBox}>
+        <button
+          className={buttonClass}
+          onClick={()=>dispatch(playThis({a:i,b:i+1}))}
+        >{i+1}</button>
+        <div id="eachNode">
+          <button
+            onClick={()=>dispatch(shiftQuarterNote({position:i,shift:-1}))}
+          > {"<"} </button>
+          <button
+            onClick={()=>dispatch(playToneBySoft(quarterNotes[i]))}
+            > {toNoteString(quarterNotes[i])} </button>
+          <button
+            onClick={()=>dispatch(shiftQuarterNote({position:i,shift:1}))}
+          > {">"} </button>
+        </div>
+      </div>
     )
   }
 
@@ -126,10 +151,6 @@ export function Counter() {
   return (
     <div>
       <div id="tonePart">
-        <button
-          className={styles.button}
-          onClick={()=>dispatch(build())}
-        >Build</button>
         <div id="configure">
           <div id="tempo">
             Tempo
@@ -163,14 +184,14 @@ export function Counter() {
           /> seconds longer
           </div>
 
-          <button
-            className={styles.button}
-          >Wait
-
-          </button>
         </div>
         {allRowButton4n}
       </div>
+    </div>
+  );
+}
+
+/*
       <div className={styles.row}>
         <button
           className={styles.button}
@@ -214,6 +235,4 @@ export function Counter() {
           Add If Odd
         </button>
       </div>
-    </div>
-  );
-}
+ */

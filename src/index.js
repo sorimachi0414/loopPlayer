@@ -34,6 +34,20 @@ export const player = new Tone.Player(music,()=>musicOnLoad()).toDestination();
 player.loop = true;
 player.autostart = false;
 
+export const synth = new Tone.Synth().toDestination();
+synth.volume.value=6
+
+export const toNoteString=(num)=>{
+  // 24 = C2
+  // noteNumber = noteSymbol + noteHeight
+  const toToneLetter=['C','C#','D','D#','E','F','F#','G','G#','A','A#','B',]
+  let noteNumber=num
+  let noteSymbol = toToneLetter[noteNumber%12]
+  let noteHeight = ~~(noteNumber/12)
+  let note = String(noteSymbol)+String(noteHeight)
+  return note
+}
+
 
 //------------
 
