@@ -29,7 +29,6 @@ export function Counter() {
   const bpm=useSelector((state) => state.counter.bpm)
   const wait = useSelector((state) => state.counter.wait)
   const expand = useSelector((state) => state.counter.expand)
-  //const numberOf4n = useSelector(select4n);
   const numberOf4n = useSelector((state) => state.counter.numberOf4n)
   const activePosition = useSelector((state) => state.counter.activePosition)
   const dispatch = useDispatch();
@@ -39,20 +38,43 @@ export function Counter() {
   const incrementValue = Number(incrementAmount) || 0;
   let keyPositionValue = Number(keyPosition) || 0;
 
+
+
   let button4n=[]
   for(let i=0;i<numberOf4n;i++){
+    if (i%(rowLength)==0){
+     button4n.push(
+       <button
+         className={styles.buttonMiniLoop}
+         onClick={()=>dispatch(
+           playThis({a:i,b:i+rowLength})
+             )
+         }
+       >↺8</button>
+     )
+    }
+    if(i%(rowLength)==0 || i%(rowLength/2)==0){
+      button4n.push(
+        <button
+          className={styles.buttonMiniLoop}
+          onClick={()=>dispatch(playThis({a:i,b:i+rowLength/2}))}
+        >↺4</button>
+      )
+    }
+    let buttonClass = (activePosition==i) ? styles.buttonActive: styles.buttonMonospace
     button4n.push(
       <button
-        className={styles.buttonMonospace}
-        onClick={()=>dispatch(playThis(i))}
+        className={buttonClass}
+        onClick={()=>dispatch(playThis({a:i,b:i+1}))}
       >{i+1}</button>
     )
   }
 
   let rowButton4n=[]
   for(let i=0;i<button4n.length;i++){
-    let n=~~(i/rowLength)
-    if(i%rowLength==0) rowButton4n[n]=[]
+    let actualRowLength = rowLength + 3
+    let n=~~(i/actualRowLength)
+    if(i%(actualRowLength)==0) rowButton4n[n]=[]
     rowButton4n[n].push(
       button4n[i]
     )
@@ -65,6 +87,7 @@ export function Counter() {
     )
   }
 
+  //Key Listner
   useEffect(() => {
     document.addEventListener('keydown', handleKeyDown);
     document.addEventListener('keyup', handleKeyUp);
@@ -77,17 +100,20 @@ export function Counter() {
   const handleKeyDown = (event) => {
     console.debug("Key event", event);
     if (event.code=='Space') {
-      dispatch(playThis(activePosition))
+      dispatch(playThis({a:activePosition,b:activePosition+1}))
+      event.preventDefault()
     }else if (event.code=='ArrowRight') {
-      dispatch(playThis(activePosition+1))
+      dispatch(playThis({a:activePosition+1,b:activePosition+2}))
       dispatch(shiftActivePosition(activePosition + 1))
+      event.preventDefault()
     }else if (event.code=='ArrowLeft') {
-      dispatch(playThis(activePosition-1))
+      dispatch(playThis({a:activePosition-1,b:activePosition}))
       dispatch(shiftActivePosition(activePosition - 1))
+      event.preventDefault()
     }
     //dispatch(handleKeyInput(game_state, connection_status, event.key));
     document.removeEventListener('keydown', handleKeyDown);
-    event.preventDefault()
+
   };
 
   const handleKeyUp = (event) => {
@@ -95,6 +121,7 @@ export function Counter() {
     document.addEventListener('keydown', handleKeyDown, {once: true});
     event.preventDefault()
   };
+
 
   return (
     <div>
@@ -116,22 +143,24 @@ export function Counter() {
           />bpm
           </div>
           <div id="wait">
-            Wait <input
+            Cue point <input
             className={styles.textbox}
             aria-label="Set increment amount"
             defaultValue={wait}
             type="number"
+            step='0.1'
             onChange={(e) => dispatch(changeWait(e.target.value))}
-          />second
+          />seconds
           </div>
           <div id="expand">
-            Plays Longer <input
+            Plays <input
             className={styles.textbox}
             aria-label="Set increment amount"
-            defaultValue={expand*100}
+            defaultValue={expand}
             type="number"
+            step="0.1"
             onChange={(e) => dispatch(changeExpand(e.target.value))}
-          /> %
+          /> seconds longer
           </div>
 
           <button

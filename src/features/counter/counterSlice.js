@@ -2,20 +2,13 @@ import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
 import { fetchCount } from './counterAPI';
 import {player} from '../../index'
 
-
-import * as Tone from 'tone'
-import music from './music2.mp3';
-import {useDispatch} from "react-redux"; //tempo 113
-//import {player} from "./Counter"
-//my-app/src/features/counter/counterSlice.js
-//my-app/src/index.js
 const initialState = {
   activePosition:0,
   loaded:0,
   value: 0,
   bpm:113,
   wait:0,
-  expand:1.0,
+  expand:0,
   status: 'idle',
   audioLength:0,
   numberOf4n:3,
@@ -50,10 +43,17 @@ export const counterSlice = createSlice({
       state.loaded=1
     },
     playThis:(state,action)=>{
-      let i = action.payload
+      console.debug(action.payload)
+      let a = action.payload.a
+      let b = action.payload.b
       let note4n=state.musicLength/state.numberOf4n
-      player.setLoopPoints(note4n*i, note4n*(i+1));
+      let loopStart=state.wait+(note4n*a)-state.expand
+      let loopEnd=state.wait+note4n*(b)+state.expand
+      loopStart = (loopStart<0) ? 0 : (loopStart>state.musicLength)? state.musicLength : loopStart
+      loopEnd = (loopEnd<loopStart) ? loopStart : (loopEnd>state.musicLength)? state.musicLength : loopEnd
+      player.setLoopPoints(loopStart,loopEnd );
       player.start()
+      state.activePosition=a
     },
 
     playFull:(state)=>{
@@ -65,13 +65,14 @@ export const counterSlice = createSlice({
       state.numberOf4n = Math.ceil(state.musicLength * state.bpm /60)
     },
     changeWait:(state,action)=>{
-      state.wait=action.payload
+      state.wait=Number(action.payload)
     },
     changeExpand:(state,action)=>{
-      state.expand=action.payload
+      state.expand=Number(action.payload)
     },
     shiftActivePosition:(state,action)=>{
       state.activePosition=action.payload
+      state.activePosition = (state.activePosition<0) ? 0: (state.activePosition>=state.numberOf4n) ? state.numberOf4n-1 : state.activePosition
     },
 
     increment: (state) => {

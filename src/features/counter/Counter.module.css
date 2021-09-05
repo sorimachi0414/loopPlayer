@@ -46,8 +46,6 @@
   padding-left: 0.2rem;
   padding-right: 0.2rem;
   margin:0.4rem 0.3rem;
-
-
   outline: none;
   border: 2px solid transparent;
   color: rgb(112, 76, 182);
@@ -55,6 +53,49 @@
   background-color: rgba(112, 76, 182, 0.1);
   border-radius: 2px;
   transition: all 0.15s;
+}
+
+.buttonMonospace:hover,
+.buttonMonospace:focus {
+  border: 2px solid rgba(112, 76, 182, 0.4);
+}
+
+.buttonActive{
+  appearance: none;
+  background: none;
+  font-size: 2rem;
+  width:4rem;
+  padding-left: 0.2rem;
+  padding-right: 0.2rem;
+  margin:0.4rem 0.3rem;
+  outline: none;
+  border: 2px solid transparent;
+  color: rgb(112, 76, 182);
+  cursor: pointer;
+  border-radius: 2px;
+  transition: all 0.15s;
+  background-color: rgba(112, 76, 182, 0.4);
+}
+
+.buttonMiniLoop {
+  appearance: none;
+  background: none;
+  font-size: 1.5rem;
+  width:2.5rem;
+  padding-left: 0.1rem;
+  padding-right: 0.1rem;
+  margin:0.4rem 0.2rem;
+  outline: none;
+  border: 2px solid transparent;
+  color: rgb(24, 13, 42);
+  cursor: pointer;
+  background-color: rgba(188, 177, 215, 0.1);
+  border-radius: 2px;
+  transition: all 0.15s;
+}
+.buttonMiniLoop:hover,
+.buttonMiniLoop:focus {
+  border: 2px solid rgba(112, 76, 182, 0.4);
 }
 
 .textbox {
