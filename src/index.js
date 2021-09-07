@@ -9,7 +9,7 @@ import * as serviceWorker from './serviceWorker';
 //
 import * as Tone from 'tone'
 import music from "./music2.mp3";
-import {build, select4n, selectCount} from "./features/counter/counterSlice";
+import {build, playActiveToneBySoft} from "./features/counter/counterSlice";
 //Tone.js------------------------------
 let musicLength=0
 let tempo,note4n,note1m,note2m
@@ -34,8 +34,13 @@ export const player = new Tone.Player(music,()=>musicOnLoad()).toDestination();
 player.loop = true;
 player.autostart = false;
 
+export const loop = new Tone.Loop((time) => {
+  store.dispatch(playActiveToneBySoft())
+}).start(0);
+//Tone.Transport.bpm.value=113
+
 export const synth = new Tone.Synth().toDestination();
-synth.volume.value=6
+synth.volume.value=8
 
 export const toNoteString=(num)=>{
   // 24 = C2

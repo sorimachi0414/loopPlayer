@@ -18,6 +18,10 @@ import {
   shiftActivePosition,
   shiftQuarterNote,
   playToneBySoft,
+  switchPlay,
+  switchLoop,
+  switchPlaySynth,
+  fileInput,
 } from './counterSlice';
 import styles from './Counter.module.css';
 import {useKey} from 'react-use';
@@ -35,6 +39,8 @@ export function Counter() {
   const numberOf4n = useSelector((state) => state.counter.numberOf4n)
   const activePosition = useSelector((state) => state.counter.activePosition)
   const quarterNotes = useSelector((state) => state.counter.quarterNotes)
+  const isLoop = useSelector((state) => state.counter.isLoop)
+  const isPlaySynth = useSelector((state) => state.counter.isPlaySynth)
   const dispatch = useDispatch();
 
   const [incrementAmount,setIncrementAmount,keyPosition,setKeyPosition] = useState(0);
@@ -80,16 +86,19 @@ export function Counter() {
           className={buttonClass}
           onClick={()=>dispatch(playThis({a:i,b:i+1}))}
         >{i+1}</button>
-        <div id="eachNode">
+        <div id="eachNode" className={styles.noteSelctors}>
           <button
+            className={styles.noteSelectorButton}
             onClick={()=>dispatch(shiftQuarterNote({position:i,shift:-1}))}
-          > {"<"} </button>
+          > {"∧"} </button>
           <button
+            className={styles.noteSelectorButton}
             onClick={()=>dispatch(playToneBySoft(quarterNotes[i]))}
             > {toNoteString(quarterNotes[i])} </button>
           <button
+            className={styles.noteSelectorButton}
             onClick={()=>dispatch(shiftQuarterNote({position:i,shift:1}))}
-          > {">"} </button>
+          > {"∨"} </button>
         </div>
       </div>
     )
@@ -108,7 +117,7 @@ export function Counter() {
   let allRowButton4n=[]
   for(let each of rowButton4n){
     allRowButton4n.push(
-      <div>{each}</div>
+      <div className={styles.divRow}>{each}</div>
     )
   }
 
@@ -125,7 +134,8 @@ export function Counter() {
   const handleKeyDown = (event) => {
     console.debug("Key event", event);
     if (event.code=='Space') {
-      dispatch(playThis({a:activePosition,b:activePosition+1}))
+      //dispatch(playThis({a:activePosition,b:activePosition+1}))
+      dispatch(switchPlay())
       event.preventDefault()
     }else if (event.code=='ArrowRight') {
       dispatch(playThis({a:activePosition+1,b:activePosition+2}))
@@ -135,7 +145,16 @@ export function Counter() {
       dispatch(playThis({a:activePosition-1,b:activePosition}))
       dispatch(shiftActivePosition(activePosition - 1))
       event.preventDefault()
+    }else if (event.code=='ArrowUp') {
+      dispatch(shiftQuarterNote({position:activePosition,shift:1}))
+      //dispatch(shiftActivePosition(activePosition - 1))
+      event.preventDefault()
+    }else if (event.code=='ArrowDown') {
+      dispatch(shiftQuarterNote({position:activePosition,shift:-1}))
+      //dispatch(shiftActivePosition(activePosition - 1))
+      event.preventDefault()
     }
+
     //dispatch(handleKeyInput(game_state, connection_status, event.key));
     document.removeEventListener('keydown', handleKeyDown);
 
@@ -147,15 +166,27 @@ export function Counter() {
     event.preventDefault()
   };
 
+  //FIFO
+  const uploadFile = React.createRef();
+  //const file = uploadFile.current.files[0];
+
+
 
   return (
     <div>
       <div id="tonePart">
-        <div id="configure">
+        <div id="fifo">
+          <input
+            type="file"
+            ref={uploadFile}
+            onChange={()=>dispatch(fileInput(uploadFile))}
+          />
+        </div>
+        <div id="configure" className={styles.configures}>
           <div id="tempo">
             Tempo
             <input
-            className={styles.textbox}
+            className={styles.configInput}
             aria-label="Set increment amount"
             defaultValue={bpm}
             type="number"
@@ -165,7 +196,7 @@ export function Counter() {
           </div>
           <div id="wait">
             Cue point <input
-            className={styles.textbox}
+            className={styles.configInput}
             aria-label="Set increment amount"
             defaultValue={wait}
             type="number"
@@ -175,13 +206,33 @@ export function Counter() {
           </div>
           <div id="expand">
             Plays <input
-            className={styles.textbox}
+            className={styles.configInput}
             aria-label="Set increment amount"
             defaultValue={expand}
             type="number"
             step="0.1"
             onChange={(e) => dispatch(changeExpand(e.target.value))}
           /> seconds longer
+          </div>
+          <div>
+            <input
+              id={'loop'}
+              type="checkbox"
+              name="inputNames"
+              checked={isLoop}
+              onChange={()=>dispatch(switchLoop())}
+              value={0}
+            />loop
+          </div>
+          <div>
+            <input
+              id={'loop'}
+              type="checkbox"
+              name="inputNames"
+              checked={isPlaySynth}
+              onChange={()=>dispatch(switchPlaySynth())}
+              value={0}
+            />Play soft synth
           </div>
 
         </div>

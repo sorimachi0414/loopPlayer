@@ -1,6 +1,57 @@
+.divRow{
+  height:9.5rem;
+}
+
+.noteSelectorButton{
+  appearance: none;
+  background: none;
+  font-size: 0.8rem;
+  width:3.5rem;
+  margin:0.1rem auto;
+  outline: none;
+  border: 2px solid transparent;
+  color: rgb(112, 76, 182);
+  cursor: pointer;
+  background-color: rgba(149, 130, 185, 0.1);
+  border-radius: 2px;
+  transition: all 0.15s;
+  display: block;
+  font-weight: bold;
+}
+
+.noteSelectors{
+
+}
+
+.configure{
+
+  text-align: left;
+  font-size:1.3rem;
+  padding:0.2rem;
+}
+
+.configures{
+  color: rgb(112, 76, 182);
+  text-align: left;
+  font-size:1.3rem;
+}
+
+.configInput{
+  border:1px solid #eee;
+  border-bottom: 2px solid #582086;
+  color: rgb(112, 76, 182);
+  font-size: 1.5rem;
+  margin:0.2rem;
+  width: 4rem;
+  text-align: center;
+}
+.configInput:hover,
+.configInput:focus {
+  border-bottom: 2px solid rgb(0, 89, 255);
+}
+
 .quarterNoteBox{
   float:left;
-
 }
 
 .row {

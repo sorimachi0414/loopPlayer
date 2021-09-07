@@ -1,12 +1,15 @@
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
 import { fetchCount } from './counterAPI';
-import {player,synth,toNoteString} from '../../index'
+import {player,synth,toNoteString,loop} from '../../index'
 import * as Tone from 'tone'
 
 
 
 const initialState = {
   activePosition:0,
+  isLoop:true,
+  isPlay:false,
+  isPlaySynth:true,
   loaded:0,
   value: 0,
   bpm:113,
@@ -39,6 +42,15 @@ export const counterSlice = createSlice({
   initialState,
   // The `reducers` field lets us define reducers and generate associated actions
   reducers: {
+    switchPlay:(state)=>{
+      if (player.state=='stopped'){
+        player.start()
+        Tone.Transport.start();
+      }else{
+        player.stop()
+        Tone.Transport.stop()
+      }
+    },
     initPlayer:(state)=>{
 
     },
@@ -53,7 +65,6 @@ export const counterSlice = createSlice({
       }
     },
     playThis:(state,action)=>{
-      console.debug(action.payload)
       let a = action.payload.a
       let b = action.payload.b
       let note4n=state.musicLength/state.numberOf4n
@@ -61,8 +72,29 @@ export const counterSlice = createSlice({
       let loopEnd=state.wait+note4n*(b)+state.expand
       loopStart = (loopStart<0) ? 0 : (loopStart>state.musicLength)? state.musicLength : loopStart
       loopEnd = (loopEnd<loopStart) ? loopStart : (loopEnd>state.musicLength)? state.musicLength : loopEnd
-      player.setLoopPoints(loopStart,loopEnd );
-      player.start()
+
+      if (state.isLoop) {
+        console.log('loop')
+        player.setLoopPoints(loopStart,loopEnd );
+        player.start()
+
+        loop.interval=loopEnd-loopStart
+        Tone.Transport.start();
+      }else{
+        //console.debug(player)
+        //player.seek("+"+state.musicLength,0)
+        if (player.state=='started'){
+          player.stop()
+          player.start(0,loopStart,loopEnd-loopStart)
+        }else{
+          player.loop=false
+          player.start(0,loopStart,loopEnd-loopStart+0.5)
+        }
+        //player.stop("+"+(loopEnd-loopStart))
+        //player.stop("+"+(loopEnd-loopStart))
+        Tone.Transport.stop("+"+(loopEnd-loopStart))
+      }
+
       state.activePosition=a
     },
 
@@ -89,11 +121,30 @@ export const counterSlice = createSlice({
       let i = action.payload.position
       let shift = action.payload.shift
       state.quarterNotes[i] = state.quarterNotes[i]+shift
+      let note = toNoteString(state.quarterNotes[i]+shift)
+      synth.triggerAttackRelease(note, "8n");
     },
     playToneBySoft:(state,action)=>{
       let note = toNoteString(action.payload)
-      synth.triggerAttackRelease(note, "8n");
+      if (state.isPlaySynth) synth.triggerAttackRelease(note, "8n");
     },
+    playActiveToneBySoft:(state)=>{
+      let note = toNoteString(state.quarterNotes[state.activePosition])
+      if (state.isPlaySynth) synth.triggerAttackRelease(note, "8n");
+    },
+    switchLoop:(state)=>{
+      state.isLoop = !state.isLoop
+    },
+    switchPlaySynth:(state)=>{
+      state.isPlaySynth = !state.isPlaySynth
+    },
+    fileInput:(state,action)=>{
+      console.debug(action.payload)
+      let file = action.payload.current.files[0]
+      console.log(file)
+      let blob = URL.createObjectURL(file)
+      player.load(blob)
+    }
 
   },
   // The `extraReducers` field lets the slice handle actions defined elsewhere,
@@ -124,6 +175,11 @@ export const {
   shiftActivePosition,
   shiftQuarterNote,
   playToneBySoft,
+  switchPlay,
+  playActiveToneBySoft,
+  switchLoop,
+  switchPlaySynth,
+  fileInput,
 } = counterSlice.actions;
 
 // The function below is called a selector and allows us to select a value from
