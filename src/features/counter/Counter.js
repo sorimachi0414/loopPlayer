@@ -22,6 +22,7 @@ import {
   switchLoop,
   switchPlaySynth,
   fileInput,
+  playBySeek,
 } from './counterSlice';
 import styles from './Counter.module.css';
 import {useKey} from 'react-use';
@@ -42,6 +43,7 @@ export function Counter() {
   const isLoop = useSelector((state) => state.counter.isLoop)
   const isPlaySynth = useSelector((state) => state.counter.isPlaySynth)
   const dispatch = useDispatch();
+  const audioLength = useSelector((state) => state.counter.musicLength)
 
   const [incrementAmount,setIncrementAmount,keyPosition,setKeyPosition] = useState(0);
 
@@ -53,6 +55,7 @@ export function Counter() {
   let button4n=[]
   for(let i=0;i<numberOf4n;i++){
     //Block Loop
+
     if (i%(rowLength)==0){
      button4n.push(
        <div className={styles.quarterNoteBox}>
@@ -110,14 +113,25 @@ export function Counter() {
     let n=~~(i/actualRowLength)
     if(i%(actualRowLength)==0) rowButton4n[n]=[]
     rowButton4n[n].push(
-      button4n[i]
+        button4n[i]
     )
   }
 
   let allRowButton4n=[]
-  for(let each of rowButton4n){
+
+  for(let i=0;i<rowButton4n.length;i++){
+    let secOfBar = Math.floor(audioLength*(i*rowLength)/numberOf4n)
+    console.log(secOfBar)
+    let date = new Date(null);
+    date.setSeconds(secOfBar); // specify value for SECONDS here
+    let timeString = date.toISOString().substr(14, 5);
+
     allRowButton4n.push(
-      <div className={styles.divRow}>{each}</div>
+
+      <div className={styles.divRow}>
+        <div>{timeString}-</div>
+        <div>{rowButton4n[i]}</div>
+      </div>
     )
   }
 
@@ -181,6 +195,17 @@ export function Counter() {
             ref={uploadFile}
             onChange={()=>dispatch(fileInput(uploadFile))}
           />
+          <input
+            id="typeinp"
+            type="range"
+            className={styles.seekbar}
+            min="0"
+            max="100"
+            defaultValue={0}
+            //onChange={(e)=>console.debug(e)}
+            onChange={(e)=>dispatch(playBySeek({a:Math.floor(numberOf4n*Number(e.target.value)/100),b:numberOf4n}))}
+            step="1"
+            />
         </div>
         <div id="configure" className={styles.configures}>
           <div id="tempo">

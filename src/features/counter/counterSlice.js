@@ -16,7 +16,7 @@ const initialState = {
   wait:0,
   expand:0,
   status: 'idle',
-  audioLength:0,
+  musicLength:0,
   numberOf4n:3,
   quarterNotes:[],
 };
@@ -64,6 +64,16 @@ export const counterSlice = createSlice({
         state.quarterNotes.push(36)
       }
     },
+    playBySeek:(state,action)=>{
+      let a = action.payload.a
+      let note4n=state.musicLength/state.numberOf4n
+      let loopStart=state.wait+(note4n*a)-state.expand
+      loopStart = (loopStart<0) ? 0 : (loopStart>state.musicLength)? state.musicLength : loopStart
+      player.stop()
+      player.start(0,loopStart,9999)
+      state.activePosition=a
+    },
+
     playThis:(state,action)=>{
       let a = action.payload.a
       let b = action.payload.b
@@ -180,6 +190,7 @@ export const {
   switchLoop,
   switchPlaySynth,
   fileInput,
+  playBySeek,
 } = counterSlice.actions;
 
 // The function below is called a selector and allows us to select a value from
