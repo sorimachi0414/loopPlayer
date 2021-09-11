@@ -1,9 +1,7 @@
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
 import { fetchCount } from './counterAPI';
-import {player,synth,toNoteString,loop} from '../../index'
+import {player, synth, toNoteString, loop, now, playWithProgress} from '../../index'
 import * as Tone from 'tone'
-
-
 
 const initialState = {
   activePosition:0,
@@ -19,6 +17,7 @@ const initialState = {
   musicLength:0,
   numberOf4n:3,
   quarterNotes:[],
+  audioProgressSec:0,
 };
 
 
@@ -42,17 +41,30 @@ export const counterSlice = createSlice({
   initialState,
   // The `reducers` field lets us define reducers and generate associated actions
   reducers: {
-    switchPlay:(state)=>{
+    switchPlayBySeek:(state,action)=>{
+      player.user=Tone.now()
       if (player.state=='stopped'){
-        player.start()
+        let activePositionSec = state.musicLength*state.activePosition/state.numberOf4n
+        playWithProgress(state.isLoop,activePositionSec,state.musicLength)
+        Tone.Transport.stop()
         Tone.Transport.start();
       }else{
         player.stop()
+        player.isPlay=false
         Tone.Transport.stop()
+        Tone.Transport.cancel(0)
       }
     },
-    initPlayer:(state)=>{
-
+    switchPlay:(state)=>{
+      if (player.state=='stopped'){
+        player.start()
+        player.isPlay=true
+        Tone.Transport.start();
+      }else{
+        player.stop()
+        player.isPlay=false
+        Tone.Transport.stop()
+      }
     },
     build:(state,action)=>{
       let musicLength = action.payload
@@ -64,14 +76,19 @@ export const counterSlice = createSlice({
         state.quarterNotes.push(36)
       }
     },
-    playBySeek:(state,action)=>{
-      let a = action.payload.a
-      let note4n=state.musicLength/state.numberOf4n
-      let loopStart=state.wait+(note4n*a)-state.expand
-      loopStart = (loopStart<0) ? 0 : (loopStart>state.musicLength)? state.musicLength : loopStart
-      player.stop()
-      player.start(0,loopStart,9999)
-      state.activePosition=a
+    moveSeek:(state,action)=>{
+      state.activePosition = action.payload
+      let sec = state.musicLength * action.payload / state.numberOf4n
+      if(player.isPlay){
+        console.log('moveseek')
+        player.stop()
+        player.isPlay=false
+        Tone.Transport.stop()
+        Tone.Transport.cancel(0)
+        playWithProgress(state.isLoop,sec,state.musicLength)
+        Tone.Transport.stop()
+        Tone.Transport.start();
+      }
     },
 
     playThis:(state,action)=>{
@@ -87,8 +104,11 @@ export const counterSlice = createSlice({
         console.log('loop')
         player.setLoopPoints(loopStart,loopEnd );
         player.start()
+        player.isPlay=true
 
         loop.interval=loopEnd-loopStart
+        Tone.Transport.stop()
+        Tone.Transport.cancel(0)
         Tone.Transport.start();
       }else{
         //console.debug(player)
@@ -108,10 +128,6 @@ export const counterSlice = createSlice({
       state.activePosition=a
     },
 
-    playFull:(state)=>{
-      //player.setLoopPoints(0, note4n);
-      //player.start()
-    },
     changeBpm:(state,action)=>{
       state.bpm=Number(action.payload)
       state.numberOf4n = Math.ceil(state.musicLength * state.bpm /60)
@@ -122,6 +138,10 @@ export const counterSlice = createSlice({
     },
     changeExpand:(state,action)=>{
       state.expand=Number(action.payload)
+    },
+    secToActivePosition:(state,action)=>{
+      let sec = action.payload
+      state.activePosition = Math.floor(state.numberOf4n * sec / state.musicLength)
     },
     shiftActivePosition:(state,action)=>{
       state.activePosition=action.payload
@@ -137,10 +157,12 @@ export const counterSlice = createSlice({
     playToneBySoft:(state,action)=>{
       let note = toNoteString(action.payload)
       if (state.isPlaySynth) synth.triggerAttackRelease(note, "8n");
+      //sub function
     },
     playActiveToneBySoft:(state)=>{
       let note = toNoteString(state.quarterNotes[state.activePosition])
       if (state.isPlaySynth) synth.triggerAttackRelease(note, "8n");
+
     },
     switchLoop:(state)=>{
       state.isLoop = !state.isLoop
@@ -191,6 +213,9 @@ export const {
   switchPlaySynth,
   fileInput,
   playBySeek,
+  switchPlayBySeek,
+  secToActivePosition,
+  moveSeek,
 } = counterSlice.actions;
 
 // The function below is called a selector and allows us to select a value from

@@ -6,10 +6,10 @@ import { store } from './app/store';
 import {Provider, useSelector} from 'react-redux';
 import * as serviceWorker from './serviceWorker';
 
-//
 import * as Tone from 'tone'
 import music from "./music2.mp3";
-import {build, playActiveToneBySoft} from "./features/counter/counterSlice";
+import {build, playActiveToneBySoft, secToActivePosition, shiftActivePosition} from "./features/counter/counterSlice";
+
 //Tone.js------------------------------
 let musicLength=0
 let tempo,note4n,note1m,note2m
@@ -30,17 +30,69 @@ let musicOnLoad=()=>{
   store.dispatch(build(musicLength))
   //dispatch(build(numberOf4n))
 }
+
+//主音源再生用のオブジェクト
 export const player = new Tone.Player(music,()=>musicOnLoad()).toDestination();
+
 player.loop = true;
 player.autostart = false;
+player.isPlay=false
 
+//シークバーによる再生を、シークバーの進捗と四分音符ボタンの位置に同期させるFunction
+export const playWithProgress = (isLoop,start,end)=>{
+
+  if(!player.isPlay){
+    let interval = 0.2
+
+    Tone.Transport.scheduleRepeat((time) => {
+      //再生状況をプログレスバーに反映するためのコールバック
+      if(!player.isPlay) {
+        //再生開始時
+
+        if(isLoop){
+          //ループがTrue時は、stop/startが効かない。setLoopPointsで再生
+          player.setLoopPoints(start,end)
+          player.start()
+        }else {
+          player.stop()
+          player.start(0, start, end)
+        }
+        player.isPlay = true
+        player.sec = start
+      }else{
+        //再生中
+        player.sec += interval
+        //曲の終わりまで来たら、手動で巻き戻し
+        if(player.sec>=end) player.sec = start
+        //ActivePositionを更新
+        store.dispatch(secToActivePosition(player.sec))
+      }
+      if (player.state=='stopped'){
+        //何らかの処理でplayerが止まったら、ちゃんと止める
+        Tone.Transport.stop()
+        store.dispatch(secToActivePosition(0))
+        player.isPlay = false
+      }
+
+    }, interval, 0);
+  }else{
+    //すでに再生中に呼ばれたら、止める
+    player.isPlay=false
+    player.stop()
+    Tone.Transport.stop()
+  }
+
+}
+
+//ソフトシンセ用のブロック
 export const loop = new Tone.Loop((time) => {
   store.dispatch(playActiveToneBySoft())
 }).start(0);
-//Tone.Transport.bpm.value=113
+
 
 export const synth = new Tone.Synth().toDestination();
 synth.volume.value=8
+
 
 export const toNoteString=(num)=>{
   // 24 = C2
@@ -53,9 +105,18 @@ export const toNoteString=(num)=>{
   return note
 }
 
+export const timeColoned =(sec)=>{
+  let date = new Date(null);
+  date.setSeconds(sec); // specify value for SECONDS here
+  let result = date.toISOString().substr(14, 5);
+  return result
+}
 
 //------------
-
+require('react-dom');
+window.React2 = require('react');
+console.log('reactcheck');
+console.log(window.React1 === window.React2);
 
 ReactDOM.render(
   <React.StrictMode>

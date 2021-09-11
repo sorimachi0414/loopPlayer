@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { useEffect } from "react";
-import {toNoteString} from '../../index'
-
+import {timeColoned, toNoteString} from '../../index'
+import * as Tone from 'tone'
+import 'bootstrap/dist/css/bootstrap.min.css';
 import {
   playFull,
   build,
@@ -23,10 +24,45 @@ import {
   switchPlaySynth,
   fileInput,
   playBySeek,
+  switchPlayBySeek, moveSeek,
 } from './counterSlice';
 import styles from './Counter.module.css';
-import {useKey} from 'react-use';
+import {Container,Row,Col} from "react-bootstrap";
+let lastClick=0
+let tempo = 100
+function TapTempo(){
 
+
+  let calcTempo=()=>{
+    let lastTempo = tempo
+    let thisClick = Tone.now()
+    let interval = thisClick - lastClick
+    console.log('int',interval,thisClick,lastClick)
+    interval = (interval<12) ? interval : 12
+    let newTempo = 60 / interval
+
+    tempo = Math.round((lastTempo+newTempo)/2)
+    lastClick = thisClick
+    return tempo
+  }
+
+  const dispatch = useDispatch();
+
+  return(
+    <div>
+      <button
+        className={"btn btn-info m-1"}
+        onClick={() =>{
+            tempo = calcTempo()
+            //console.log(tempo)
+            dispatch(changeBpm(tempo))
+          }
+        }
+      >Tap</button>
+
+    </div>
+  )
+}
 
 //export let player
 export function Counter() {
@@ -44,6 +80,7 @@ export function Counter() {
   const isPlaySynth = useSelector((state) => state.counter.isPlaySynth)
   const dispatch = useDispatch();
   const audioLength = useSelector((state) => state.counter.musicLength)
+  const positionSec = useSelector((state) => state.counter.positionSec)
 
   const [incrementAmount,setIncrementAmount,keyPosition,setKeyPosition] = useState(0);
 
@@ -121,10 +158,7 @@ export function Counter() {
 
   for(let i=0;i<rowButton4n.length;i++){
     let secOfBar = Math.floor(audioLength*(i*rowLength)/numberOf4n)
-    console.log(secOfBar)
-    let date = new Date(null);
-    date.setSeconds(secOfBar); // specify value for SECONDS here
-    let timeString = date.toISOString().substr(14, 5);
+    let timeString = timeColoned(secOfBar)
 
     allRowButton4n.push(
 
@@ -187,128 +221,112 @@ export function Counter() {
 
 
   return (
-    <div>
-      <div id="tonePart">
-        <div id="fifo">
-          <input
-            type="file"
-            ref={uploadFile}
-            onChange={()=>dispatch(fileInput(uploadFile))}
-          />
-          <input
-            id="typeinp"
-            type="range"
-            className={styles.seekbar}
-            min="0"
-            max="100"
-            defaultValue={0}
-            //onChange={(e)=>console.debug(e)}
-            onChange={(e)=>dispatch(playBySeek({a:Math.floor(numberOf4n*Number(e.target.value)/100),b:numberOf4n}))}
-            step="1"
+    <Container>
+
+        <Row id="seekbars text-left">
+          <Col xs={12} className={"mb-2"}>Load your music file. Or you can test sample music file</Col>
+          <Col xs={12} className={"mb-2"}>
+            <input
+              type="file"
+              ref={uploadFile}
+              onChange={()=>dispatch(fileInput(uploadFile))}
             />
-        </div>
-        <div id="configure" className={styles.configures}>
-          <div id="tempo">
-            Tempo
+          </Col>
+          <Col xs={12} className={"mb-2"}>
             <input
-            className={styles.configInput}
-            aria-label="Set increment amount"
-            defaultValue={bpm}
-            type="number"
-            //value={bpm}
-            onChange={(e) => dispatch(changeBpm(e.target.value))}
-          />bpm
-          </div>
-          <div id="wait">
-            Cue point <input
-            className={styles.configInput}
-            aria-label="Set increment amount"
-            defaultValue={wait}
-            type="number"
-            step='0.1'
-            onChange={(e) => dispatch(changeWait(e.target.value))}
-          />seconds
-          </div>
-          <div id="expand">
-            Plays <input
-            className={styles.configInput}
-            aria-label="Set increment amount"
-            defaultValue={expand}
-            type="number"
-            step="0.1"
-            onChange={(e) => dispatch(changeExpand(e.target.value))}
-          /> seconds longer
-          </div>
-          <div>
+              id="typeinp"
+              type="range"
+              className={styles.seekbar}
+              min="0"
+              max="100"
+              defaultValue={activePosition}
+              value={activePosition/numberOf4n*100}
+              //onChange={(e)=>console.debug(e)}
+              onChange={(e)=>dispatch(moveSeek(Math.floor(numberOf4n*Number(e.target.value)/100)))}
+              step="1"
+            />
+          </Col>
+          <Col xs={4}></Col>
+          <Col xs={2} className={"mb-3"}>
+            <button
+              className={"btn btn-success"}
+              onClick={()=>dispatch(switchPlayBySeek())}
+            >Play/Stop</button>
+          </Col>
+          <Col xs={4}>
+            <span style={{"font-size":1.5+'rem'}}>
+              {timeColoned(audioLength*activePosition/numberOf4n)}
+              {" / "}
+              {timeColoned(audioLength)}
+            </span>
+          </Col>
+          <Col xs={3} className={""}></Col>
+          <Col xs={3} className={"form-check form-switch text-left"}>
             <input
+              className={"form-check-input m-1"}
               id={'loop'}
               type="checkbox"
               name="inputNames"
               checked={isLoop}
               onChange={()=>dispatch(switchLoop())}
               value={0}
-            />loop
-          </div>
-          <div>
+            />
+            <label className={"form-check-label text-left"} for={"loop"}>
+              loop
+            </label>
+          </Col>
+          <Col xs={4} className={"form-check form-switch"}>
             <input
-              id={'loop'}
+              className={"form-check-input m-1"}
+              id={'synth'}
               type="checkbox"
               name="inputNames"
               checked={isPlaySynth}
               onChange={()=>dispatch(switchPlaySynth())}
               value={0}
-            />Play soft synth
-          </div>
+            />
+            <label className={"form-check-label"} for={"synth"}>
+              Play soft synth
+            </label>
+          </Col>
+        </Row>
 
-        </div>
-        {allRowButton4n}
-      </div>
-    </div>
+        <Row className={""}>
+          <Col xs={2}></Col>
+          <Col className="input-group input-group-sm mb-1 col-xs-4 ">
+            <span className="input-group-text" id="inputGroup-sizing-sm">BPM</span>
+            <input
+              type="number"
+              className="form-control"
+              aria-label="Sizing example input"
+              aria-describedby="inputGroup-sizing-sm"
+              defaultValue={bpm}
+              type="number"
+              value={bpm}
+              onChange={(e) => dispatch(changeBpm(e.target.value))}
+            />
+            <TapTempo />
+          </Col>
+          <Col className="input-group input-group-sm mb-1 col-xs-3 ">
+            <span className="input-group-text" id="inputGroup-sizing-sm">Cue point</span>
+            <input
+              type="number"
+              className="form-control"
+              aria-label="Sizing example input"
+              aria-describedby="inputGroup-sizing-sm"
+              defaultValue={wait}
+              type="number"
+              step='0.1'
+              onChange={(e) => dispatch(changeWait(e.target.value))}
+            />
+          </Col>
+          <Col xs={2}></Col>
+        </Row>
+
+        <Row>
+          {allRowButton4n}
+        </Row>
+
+    </Container>
   );
 }
-
-/*
-      <div className={styles.row}>
-        <button
-          className={styles.button}
-          aria-label="Decrement value"
-          onClick={() => dispatch(decrement())}
-        >
-          -
-        </button>
-        <span className={styles.value}>{count}</span>
-        <button
-          className={styles.button}
-          aria-label="Increment value"
-          onClick={() => dispatch(increment())}
-        >
-          +
-        </button>
-      </div>
-      <div className={styles.row}>
-        <input
-          className={styles.textbox}
-          aria-label="Set increment amount"
-          value={incrementAmount}
-          onChange={(e) => setIncrementAmount(e.target.value)}
-        />
-        <button
-          className={styles.button}
-          onClick={() => dispatch(incrementByAmount(incrementValue))}
-        >
-          Add Amount
-        </button>
-        <button
-          className={styles.asyncButton}
-          onClick={() => dispatch(incrementAsync(incrementValue))}
-        >
-          Add Async
-        </button>
-        <button
-          className={styles.button}
-          onClick={() => dispatch(incrementIfOdd(incrementValue))}
-        >
-          Add If Odd
-        </button>
-      </div>
- */

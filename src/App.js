@@ -1,14 +1,18 @@
 import React from 'react';
-import logo from './logo.svg';
+import logo from './logo.png';
 import { Counter } from './features/counter/Counter';
 import './App.css';
+import {Container,Row,Col} from "react-bootstrap";
+
 
 function App() {
   return (
+
     <div className="App">
-      <header className="App-header">
+      <h1>Section Loop Player</h1>
+      <img src={logo} className="App-logo" alt="logo" />
         <Counter />
-      </header>
+
     </div>
   );
   //<img src={logo} className="App-logo" alt="logo" />
