@@ -48,9 +48,11 @@ export const counterSlice = createSlice({
         playWithProgress(state.isLoop,activePositionSec,state.musicLength)
         Tone.Transport.stop()
         Tone.Transport.start();
+        state.isPlay=true
       }else{
         player.stop()
         player.isPlay=false
+        state.isPlay=false
         Tone.Transport.stop()
         Tone.Transport.cancel(0)
       }
@@ -59,10 +61,12 @@ export const counterSlice = createSlice({
       if (player.state=='stopped'){
         player.start()
         player.isPlay=true
+        state.isPlay=true
         Tone.Transport.start();
       }else{
         player.stop()
         player.isPlay=false
+        state.isPlay=false
         Tone.Transport.stop()
       }
     },
@@ -83,6 +87,7 @@ export const counterSlice = createSlice({
         console.log('moveseek')
         player.stop()
         player.isPlay=false
+        state.isPlay=false
         Tone.Transport.stop()
         Tone.Transport.cancel(0)
         playWithProgress(state.isLoop,sec,state.musicLength)
@@ -105,6 +110,7 @@ export const counterSlice = createSlice({
         player.setLoopPoints(loopStart,loopEnd );
         player.start()
         player.isPlay=true
+        state.isPlay=true
 
         loop.interval=loopEnd-loopStart
         Tone.Transport.stop()
