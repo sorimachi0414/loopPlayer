@@ -51,8 +51,14 @@ export const playWithProgress = (isLoop,start,end)=>{
 
         if(isLoop){
           //ループがTrue時は、stop/startが効かない。setLoopPointsで再生
+          /*
           player.setLoopPoints(start,end)
           player.start()
+           */
+          console.log(0)
+          player.setLoopPoints(start, end)
+          player.start()
+
         }else {
           player.stop()
           player.start(0, start, end)

@@ -5,16 +5,8 @@ import {timeColoned, toNoteString} from '../../index'
 import * as Tone from 'tone'
 import 'bootstrap/dist/css/bootstrap.min.css';
 import {
-  playFull,
-  build,
-  changeBpm, changeWait, changeExpand,
-  decrement,
-  increment,
-  incrementByAmount,
-  incrementAsync,
-  incrementIfOdd,
+  changeBpm, changeWait,
   selectCount,
-  select4n,
   playThis, counterSlice,
   shiftActivePosition,
   shiftQuarterNote,
@@ -24,12 +16,64 @@ import {
   switchPlaySynth,
   fileInput,
   playBySeek,
-  switchPlayBySeek, moveSeek,
+  switchPlayBySeek, moveSeek,changeExpandAfter,changeExpandBefore,changeSpeed
 } from './counterSlice';
 import styles from './Counter.module.css';
 import {Container,Row,Col} from "react-bootstrap";
+import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
+import { faPause, faPauseCircle, faPlay, faPlayCircle, faStop,faCoffee} from "@fortawesome/free-solid-svg-icons";
+import {faFileAudio} from "@fortawesome/free-regular-svg-icons";
 let lastClick=0
 let tempo = 100
+
+let fontObject =(min,nom,max)=> {
+  let result
+  result = {
+    "font-size":"clamp("+
+      min+"rem"
+      +","+
+      nom+"vw"
+      +","+
+      max+"rem"
+      +")"
+  }
+  return result
+}
+
+
+const ChangeSpeed=()=>{
+  const dispatch = useDispatch();
+  const speed = useSelector((state) => state.counter.speed)
+
+  return(
+    <Row>
+      <Col className={"px-0"}>
+        <span
+          className="input-group-text px-1" id="inputGroup-sizing-sm"
+          style={fontObject(0.5,2,1)}        >
+
+          Speed Rate
+        </span>
+      </Col>
+      <Col>
+        <input
+          type="number"
+          className="form-control p-1"
+          aria-label="Sizing example input"
+          aria-describedby="inputGroup-sizing-sm"
+          defaultValue={speed}
+          type="number"
+          step='0.25'
+          max={1}
+          min={0.5}
+          style={fontObject(0.5,2,1)}
+          onChange={(e) => dispatch(changeSpeed(e.target.value))}
+        />
+      </Col>
+    </Row>
+  )
+
+}
 
 const InputCuePoint=()=>{
   const dispatch = useDispatch();
@@ -39,7 +83,9 @@ const InputCuePoint=()=>{
     <Row>
       <Col className={"px-0"}>
         <span
-          className="input-group-text px-1" id="inputGroup-sizing-sm">
+          style={fontObject(0.5,2,1)}
+          className="input-group-text px-1" id="inputGroup-sizing-sm"
+        >
           Cue point
         </span>
       </Col>
@@ -52,6 +98,7 @@ const InputCuePoint=()=>{
           defaultValue={wait}
           type="number"
           step='0.1'
+          style={fontObject(0.5,2,1)}
           onChange={(e) => dispatch(changeWait(e.target.value))}
         />
       </Col>
@@ -78,6 +125,7 @@ const InputBPM=()=>{
         type="number"
         value={bpm}
         size={3}
+        style={fontObject(0.5,2,1)}
         onChange={(e) => dispatch(changeBpm(e.target.value))}
     />
     </Col>
@@ -109,7 +157,7 @@ const TapTempo=()=>{
         className={"btn btn-outline-secondary mx-0 px-1"}
         type="button"
         id="button-addon1"
-
+        style={fontObject(0.5,2,1)}
         onClick={() =>{
             tempo = calcTempo()
             //console.log(tempo)
@@ -135,7 +183,11 @@ let ToggleLoop=()=>{
         onChange={() => dispatch(switchLoop())}
         value={0}
       />
-    <label className={"form-check-label text-left"} htmlFor={"loop"}>
+    <label
+      className={"form-check-label text-left"}
+      htmlFor={"loop"}
+      style={fontObject(0.5,2,1)}
+    >
       Loop
     </label>
     </div>
@@ -157,7 +209,11 @@ const ToggleSynth=()=>{
         onChange={() => dispatch(switchPlaySynth())}
         value={0}
       />
-      <label className={"form-check-label"} htmlFor={"synth"}>
+      <label
+        className={"form-check-label"}
+        htmlFor={"synth"}
+        style={fontObject(0.5,2,1)}
+      >
         Soft piano
       </label>
     </div>
@@ -184,66 +240,79 @@ export function Counter() {
   const incrementValue = Number(incrementAmount) || 0;
   let keyPositionValue = Number(keyPosition) || 0;
 
-
-
   let button4n=[]
   for(let i=0;i<numberOf4n;i++){
     //Block Loop
-
     if (i%(rowLength)==0){
      button4n.push(
-       <div className={styles.quarterNoteBox}>
-         <button
-           className={styles.buttonMiniLoop}
-           onClick={()=>dispatch(
-             playThis({a:i,b:i+rowLength})
-               )
-           }
-         >↺<br />8</button>
-       </div>
+       <Col className={"p-1 offset-1 offset-sm-1"} xs={2} sm={1}>
+         <Row>
+           <Col>
+             <button
+               className={"btn btn btn-outline-dark w-75 my-1"}
+               onClick={()=>dispatch(
+                 playThis({a:i,b:i+rowLength})
+                   )
+               }
+             >↺ 8</button>
+           </Col>
+           <Col>
+             <button
+               className={"btn btn btn-outline-dark w-75 my-1"}
+               onClick={()=>dispatch(playThis({a:i,b:i+rowLength/2}))}
+             >↺ 4</button>
+           </Col>
+         </Row>
+       </Col>
      )
     }
     //Block loop
-    if(i%(rowLength)==0 || i%(rowLength/2)==0){
+    if(i%(rowLength)!==0 && i%(rowLength/2)==0){
       button4n.push(
-        <div className={styles.quarterNoteBox}>
+        <Col className={"p-1 offset-1 offset-sm-0"} xs={2} sm={1}>
           <button
-            className={styles.buttonMiniLoop}
+            className={"btn btn-outline-dark w-75"}
             onClick={()=>dispatch(playThis({a:i,b:i+rowLength/2}))}
-          >↺<br />4</button>
-        </div>
+          >↺ 4</button>
+        </Col>
       )
     }
 
     //Quarter Note
-    let buttonClass = (activePosition==i) ? styles.buttonActive: styles.buttonMonospace
+    let inactiveButtonClass ="btn btn btn-outline-success w-100 h-100 py-1"
+    let activeButtonClass ="btn btn btn-success w-100 h-100 py-1"
+    let buttonClass = (activePosition==i) ? activeButtonClass: inactiveButtonClass
     button4n.push(
-      <div className={styles.quarterNoteBox}>
-        <button
-          className={buttonClass}
-          onClick={()=>dispatch(playThis({a:i,b:i+1}))}
-        >{i+1}</button>
-        <div id="eachNode" className={styles.noteSelctors}>
-          <button
-            className={styles.noteSelectorButton}
-            onClick={()=>dispatch(shiftQuarterNote({position:i,shift:-1}))}
-          > {"∧"} </button>
-          <button
-            className={styles.noteSelectorButton}
-            onClick={()=>dispatch(playToneBySoft(quarterNotes[i]))}
-            > {toNoteString(quarterNotes[i])} </button>
-          <button
-            className={styles.noteSelectorButton}
-            onClick={()=>dispatch(shiftQuarterNote({position:i,shift:1}))}
-          > {"∨"} </button>
-        </div>
-      </div>
+      <Col className={"m-0 px-1 h-100"} id='buttonDiv' xs={2} sm={1}>
+        <Row>
+          <Col xs={12}>
+            <button
+              className={buttonClass+" px-0 px-sm-0"}
+              onClick={()=>dispatch(playThis({a:i,b:i+1}))}
+            ><span style={{"font-size":1.5+"em"}}>{i+1}</span></button>
+          </Col>
+          <Col id="eachNode" className={"my-1"} xs={12}>
+            <button
+              className={"btn btn-outline-secondary w-75 py-0 rounded-0"}
+              onClick={()=>dispatch(shiftQuarterNote({position:i,shift:-1}))}
+            > {"∧"} </button>
+            <button
+              className={"btn btn-outline-secondary w-75 py-0 rounded-0 px-0"}
+              onClick={()=>dispatch(playToneBySoft(quarterNotes[i]))}
+              > {toNoteString(quarterNotes[i])} </button>
+            <button
+              className={"btn btn-outline-secondary w-75 py-0 rounded-0"}
+              onClick={()=>dispatch(shiftQuarterNote({position:i,shift:1}))}
+            > {"∨"} </button>
+          </Col>
+        </Row>
+      </Col>
     )
   }
 
   let rowButton4n=[]
   for(let i=0;i<button4n.length;i++){
-    let actualRowLength = rowLength + 3
+    let actualRowLength = rowLength + 2
     let n=~~(i/actualRowLength)
     if(i%(actualRowLength)==0) rowButton4n[n]=[]
     rowButton4n[n].push(
@@ -258,12 +327,17 @@ export function Counter() {
     let timeString = timeColoned(secOfBar)
 
     allRowButton4n.push(
-    <div>
-      <Row className={"justify-content-center"}>
-        <Col xs={12} lg={8} className={"px-0 py-0 text-start"}>{timeString}-</Col>
-        <Col xs={"auto"} className={"px-0"}>{rowButton4n[i]}</Col>
-      </Row>
-    </div>
+      <Col xs={12} className={"px-sm-0 px-4 mx-sm-0 mb-2"} id="ParentOfTimeAndButton">
+        <Row className={"justify-content-center"} id="row">
+          <Col xs={12} lg={12} className={"px-sm-0 py-sm-0 text-start offset-sm-2"}>
+            {timeString}-
+          </Col>
+        </Row>
+        <Row xs={12} className={"px-0 mx-0"} id='row2'>
+          {rowButton4n[i]}
+        </Row>
+      </Col>
+
     )
   }
 
@@ -316,11 +390,12 @@ export function Counter() {
   const uploadFile = React.createRef();
   //const file = uploadFile.current.files[0];
 
-  let playStopLabel = (isPlay) ? "Stop" : "Play"
+  let playStopLabel = (isPlay) ? faPause : faPlay
+  let globalPlayStopLabel =(isPlay)? faPauseCircle:faPlayCircle
 
   return (
     <div className={"mb-5"}>
-    <Container className={"justify-content-center mb-4"}>
+    <Container className={"justify-content-center mb-4 px-0"}>
         <Row id="seekbars" className={"text-left justify-content-center"}>
           <Col xs={12} className={"mb-2"}>Load your music file. Or you can test sample music file</Col>
           <Col xs={12} className={"mb-4"}>
@@ -348,7 +423,7 @@ export function Counter() {
                   defaultValue={0}
                   type="number"
                   step='0.1'
-                  onChange={(e) => dispatch(changeWait(e.target.value))}
+                  onChange={(e) => dispatch(changeExpandBefore(e.target.value))}
                 />
               </Col>
               <Col className={"px-0"}>
@@ -366,7 +441,7 @@ export function Counter() {
                   defaultValue={0}
                   type="number"
                   step='0.1'
-                  onChange={(e) => dispatch(changeWait(e.target.value))}
+                  onChange={(e) => dispatch(changeExpandAfter(e.target.value))}
                 />
               </Col>
             </Row>
@@ -374,22 +449,38 @@ export function Counter() {
           </Col>
         </Row>
       <Row className={"justify-content-center"}>
-        <Col xs={12} sm={12} lg={10}>
+        <Col xs={12} sm={12} lg={10} className={"px-0 mx-0"}>
+          <Row>
             {allRowButton4n}
+          </Row>
         </Col>
       </Row>
+      <Row className={"my-5"}>
+        <Col></Col>
+      </Row>
     </Container>
-    <div className={"my-5"}></div>
-    <Container className={"mt-4"}>
+
+    <Container className={"mt-4"} id={"footer"}>
         <Row className="navbar navbar-light bg-light fixed-bottom">
           <Col className="offset-sm-0 offset-md-0 offset-lg-0" xs={12} sm={12} md={12}>
-            <Row className="px-1 mx-0 border border-dark justify-content-center">
-              <Col xs={8} sm={8} md={4} className={"mb-2"}>
+            <Row className="px-1 mx-0 justify-content-center">
+              <Col xs={2} sm={2} md={1} id={'resumeButton'}>
+                <FontAwesomeIcon
+                  icon={globalPlayStopLabel}
+                  size={"4x"}
+                  color={"#0077ff"}
+                 onClick={()=>dispatch(switchPlay())}
+                />
+
+
+              </Col>
+              <Col xs={6} sm={7} md={3} className={"mb-2"}>
                 <div>
                   <input
                     id="typeinp"
                     type="range"
-                    className={styles.seekbar}
+                    className={""}
+                    style={{'width':100+'%'}}
                     min="0"
                     max="100"
                     defaultValue={activePosition}
@@ -400,26 +491,47 @@ export function Counter() {
                   />
                 </div>
                 <div>
-                  <button
-                    className={"btn btn-success my-0 py-0 mx-1"}
+                  <FontAwesomeIcon
+                    icon={playStopLabel}
+                    color={"#179317"}
+                    size={"2x"}
+                    className={"my-0 py-0 mx-1"}
                     onClick={()=>dispatch(switchPlayBySeek())}
-                  >{playStopLabel}</button>
-                <span style={{"font-size":1.2+'rem'}}>
+                  />
+                  <FontAwesomeIcon
+                    icon={faFileAudio}
+                    size={"2x"}
+                    color={"#179317"}
+                  />
+                  <span
+                    style={{
+                        marginLeft: 5 + "px",
+                        ...fontObject(0.1,4,1)
+                      }}
+                  >
                   {timeColoned(audioLength*activePosition/numberOf4n)}
                   {" / "}
                   {timeColoned(audioLength)}
                 </span>
                 </div>
               </Col>
-              <Col xs={4} sm={4} md={2} className={"form-check form-switch text-left px-0"}>
+              <Col xs={4} sm={3} md={2} className={"form-check form-switch text-left px-0"}>
                 <ToggleLoop />
                 <ToggleSynth />
               </Col>
-              <Col xs={6} sm={6} md={3} className={"form-check form-switch"}>
+              <Col xs={4} sm={4} md={3} className={"form-check form-switch"}>
                 <InputBPM />
+                Volume
               </Col>
-              <Col xs={6} sm={6} md={3} className={"form-check form-switch"}>
-                <InputCuePoint />
+              <Col xs={8} sm={8} md={3} className={"form-check form-switch"}>
+                <Row>
+                  <Col xs={6} md={12}>
+                    <InputCuePoint />
+                  </Col>
+                  <Col xs={6} md={12}>
+                    <ChangeSpeed />
+                  </Col>
+                </Row>
               </Col>
             </Row>
           </Col>

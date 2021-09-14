@@ -12,12 +12,14 @@ const initialState = {
   value: 0,
   bpm:113,
   wait:0,
-  expand:0,
+  expandBefore:0,
+  expandAfter:0,
   status: 'idle',
   musicLength:0,
   numberOf4n:3,
   quarterNotes:[],
   audioProgressSec:0,
+  speed:1.0,
 };
 
 
@@ -41,14 +43,54 @@ export const counterSlice = createSlice({
   initialState,
   // The `reducers` field lets us define reducers and generate associated actions
   reducers: {
+    changeSpeed:(state,action)=>{
+      let rate = action.payload
+      state.speed = rate
+      let shift=0
+      if (rate<=0.5){
+        rate=0.5
+        shift=12
+      }else if (rate<=0.75){
+        rate=0.75
+        shift=5
+      }else if(rate<1.5){
+        rate=1.0
+        shift=0
+      }else if(rate<=1.75){
+        rate=1.5
+        shift=-7
+      }else{
+        rate=2.0
+        shift=-12
+      }
+
+      player.playbackRate = rate
+      let shifter = new Tone.PitchShift({
+        pitch:shift,
+        windowSize:0.1,
+      }).toDestination()
+      player.disconnect()
+      player.connect(shifter)
+
+    },
     switchPlayBySeek:(state,action)=>{
       player.user=Tone.now()
       if (player.state=='stopped'){
-        let activePositionSec = state.musicLength*state.activePosition/state.numberOf4n
-        playWithProgress(state.isLoop,activePositionSec,state.musicLength)
-        Tone.Transport.stop()
-        Tone.Transport.start();
-        state.isPlay=true
+        if(state.isLoop){
+
+          state.isPlay = true
+          player.stop()
+          let activePositionSec = state.musicLength * state.activePosition / state.numberOf4n
+          playWithProgress(state.isLoop, activePositionSec, state.musicLength)
+          Tone.Transport.stop()
+          Tone.Transport.start();
+        }else {
+          let activePositionSec = state.musicLength * state.activePosition / state.numberOf4n
+          playWithProgress(state.isLoop, activePositionSec, state.musicLength)
+          Tone.Transport.stop()
+          Tone.Transport.start();
+          state.isPlay = true
+        }
       }else{
         player.stop()
         player.isPlay=false
@@ -59,6 +101,7 @@ export const counterSlice = createSlice({
     },
     switchPlay:(state)=>{
       if (player.state=='stopped'){
+
         player.start()
         player.isPlay=true
         state.isPlay=true
@@ -97,11 +140,12 @@ export const counterSlice = createSlice({
     },
 
     playThis:(state,action)=>{
+      //Todo: ボタンでプログレスバーを表現する？
       let a = action.payload.a
       let b = action.payload.b
       let note4n=state.musicLength/state.numberOf4n
-      let loopStart=state.wait+(note4n*a)-state.expand
-      let loopEnd=state.wait+note4n*(b)+state.expand
+      let loopStart=state.wait+(note4n*a)-state.expandBefore
+      let loopEnd=state.wait+note4n*(b)+state.expandAfter
       loopStart = (loopStart<0) ? 0 : (loopStart>state.musicLength)? state.musicLength : loopStart
       loopEnd = (loopEnd<loopStart) ? loopStart : (loopEnd>state.musicLength)? state.musicLength : loopEnd
 
@@ -142,8 +186,11 @@ export const counterSlice = createSlice({
     changeWait:(state,action)=>{
       state.wait=Number(action.payload)
     },
-    changeExpand:(state,action)=>{
-      state.expand=Number(action.payload)
+    changeExpandBefore:(state,action)=>{
+      state.expandBefore=Number(action.payload)
+    },
+    changeExpandAfter:(state,action)=>{
+      state.expandAfter=Number(action.payload)
     },
     secToActivePosition:(state,action)=>{
       let sec = action.payload
@@ -209,7 +256,8 @@ export const {
   playThis,
   changeBpm,
   changeWait,
-  changeExpand,
+  changeExpandBefore,
+  changeExpandAfter,
   shiftActivePosition,
   shiftQuarterNote,
   playToneBySoft,
@@ -222,6 +270,7 @@ export const {
   switchPlayBySeek,
   secToActivePosition,
   moveSeek,
+  changeSpeed,
 } = counterSlice.actions;
 
 // The function below is called a selector and allows us to select a value from
