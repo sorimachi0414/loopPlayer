@@ -37,6 +37,7 @@ export const player = new Tone.Player(music,()=>musicOnLoad()).toDestination();
 player.loop = true;
 player.autostart = false;
 player.isPlay=false
+player.volume.value=-18
 
 //シークバーによる再生を、シークバーの進捗と四分音符ボタンの位置に同期させるFunction
 export const playWithProgress = (isLoop,start,end)=>{
@@ -46,6 +47,8 @@ export const playWithProgress = (isLoop,start,end)=>{
 
     Tone.Transport.scheduleRepeat((time) => {
       //再生状況をプログレスバーに反映するためのコールバック
+      //ToDO:コールバックでstatusを確認して、stoppedならもっかい再生という
+      //処理に変更すればシンプルかもしれない。
       if(!player.isPlay) {
         //再生開始時
 
@@ -91,13 +94,16 @@ export const playWithProgress = (isLoop,start,end)=>{
 }
 
 //ソフトシンセ用のブロック
-export const loop = new Tone.Loop((time) => {
-  store.dispatch(playActiveToneBySoft())
-}).start(0);
+//export const loop = new Tone.Loop((time) => {
+  //store.dispatch(playActiveToneBySoft())
+//})//.start(0);
 
+Tone.Transport.scheduleRepeat((time) => {
+  store.dispatch(playActiveToneBySoft())
+}, "4n");
 
 export const synth = new Tone.Synth().toDestination();
-synth.volume.value=8
+synth.volume.value=0
 
 
 export const toNoteString=(num)=>{

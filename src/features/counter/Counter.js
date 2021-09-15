@@ -16,7 +16,7 @@ import {
   switchPlaySynth,
   fileInput,
   playBySeek,
-  switchPlayBySeek, moveSeek,changeExpandAfter,changeExpandBefore,changeSpeed
+  switchPlayBySeek, moveSeek,changeExpandAfter,changeExpandBefore,changeSpeed,changeVolume
 } from './counterSlice';
 import styles from './Counter.module.css';
 import {Container,Row,Col} from "react-bootstrap";
@@ -105,7 +105,39 @@ const InputCuePoint=()=>{
     </Row>
   )
 }
+const Volume=()=>{
+  const dispatch = useDispatch();
+  const volume = useSelector((state) => state.counter.volume)
 
+
+  return(
+    <Row>
+      <Col className={"px-0"}>
+        <span
+          style={fontObject(0.5,2,1)}
+          className="input-group-text px-1" id="inputGroup-sizing-sm"
+        >
+          Volume
+        </span>
+      </Col>
+      <Col>
+        <input
+          type="number"
+          className="form-control"
+          aria-label="Sizing example input"
+          aria-describedby="inputGroup-sizing-sm"
+          defaultValue={volume}
+          type="number"
+          max={100}
+          min={0}
+          step='10'
+          style={fontObject(0.5,2,1)}
+          onChange={(e) => dispatch(changeVolume(e.target.value))}
+        />
+      </Col>
+    </Row>
+  )
+}
 const InputBPM=()=>{
   const dispatch = useDispatch();
   const bpm=useSelector((state) => state.counter.bpm)
@@ -294,7 +326,7 @@ export function Counter() {
           <Col id="eachNode" className={"my-1"} xs={12}>
             <button
               className={"btn btn-outline-secondary w-75 py-0 rounded-0"}
-              onClick={()=>dispatch(shiftQuarterNote({position:i,shift:-1}))}
+              onClick={()=>dispatch(shiftQuarterNote({position:i,shift:1}))}
             > {"∧"} </button>
             <button
               className={"btn btn-outline-secondary w-75 py-0 rounded-0 px-0"}
@@ -302,7 +334,7 @@ export function Counter() {
               > {toNoteString(quarterNotes[i])} </button>
             <button
               className={"btn btn-outline-secondary w-75 py-0 rounded-0"}
-              onClick={()=>dispatch(shiftQuarterNote({position:i,shift:1}))}
+              onClick={()=>dispatch(shiftQuarterNote({position:i,shift:-1}))}
             > {"∨"} </button>
           </Col>
         </Row>
@@ -521,7 +553,7 @@ export function Counter() {
               </Col>
               <Col xs={4} sm={4} md={3} className={"form-check form-switch"}>
                 <InputBPM />
-                Volume
+                <Volume />
               </Col>
               <Col xs={8} sm={8} md={3} className={"form-check form-switch"}>
                 <Row>

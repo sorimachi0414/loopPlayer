@@ -20,6 +20,7 @@ const initialState = {
   quarterNotes:[],
   audioProgressSec:0,
   speed:1.0,
+  volume:50,
 };
 
 
@@ -96,7 +97,7 @@ export const counterSlice = createSlice({
         player.isPlay=false
         state.isPlay=false
         Tone.Transport.stop()
-        Tone.Transport.cancel(0)
+
       }
     },
     switchPlay:(state)=>{
@@ -151,14 +152,14 @@ export const counterSlice = createSlice({
 
       if (state.isLoop) {
         console.log('loop')
-        player.setLoopPoints(loopStart,loopEnd );
-        player.start()
+
+        player.loopStart = loopStart
+        player.loopEnd = loopEnd
+        player.start(0,loopStart+0.1)
+        if(player.state=="stopped") player.start()
+
         player.isPlay=true
         state.isPlay=true
-
-        loop.interval=loopEnd-loopStart
-        Tone.Transport.stop()
-        Tone.Transport.cancel(0)
         Tone.Transport.start();
       }else{
         //console.debug(player)
@@ -170,21 +171,32 @@ export const counterSlice = createSlice({
           player.loop=false
           player.start(0,loopStart,loopEnd-loopStart+0.5)
         }
-        //player.stop("+"+(loopEnd-loopStart))
-        //player.stop("+"+(loopEnd-loopStart))
-        Tone.Transport.stop("+"+(loopEnd-loopStart))
+
+        //Tone.Transport.stop("+"+(loopEnd-loopStart))
+        Tone.Transport.stop()
       }
 
       state.activePosition=a
     },
 
     changeBpm:(state,action)=>{
-      state.bpm=Number(action.payload)
+      let bpm = Number(action.payload)
+      bpm = (bpm<1) ? 1 : bpm
+      bpm = (bpm>999) ? 999 : bpm
+      state.bpm=bpm
       state.numberOf4n = Math.ceil(state.musicLength * state.bpm /60)
-      //Tone.Transport.bpm=action.payload
+      Tone.Transport.bpm.value=bpm
     },
     changeWait:(state,action)=>{
       state.wait=Number(action.payload)
+    },
+    changeVolume:(state,action)=>{
+      let vol = Number(action.payload)
+      state.volume=vol
+      let dB = -36 + 36*vol/100
+      dB =(vol==0) ? -100:dB
+      dB =(dB>0) ? 0 : dB
+      player.volume.value=dB
     },
     changeExpandBefore:(state,action)=>{
       state.expandBefore=Number(action.payload)
@@ -214,7 +226,7 @@ export const counterSlice = createSlice({
     },
     playActiveToneBySoft:(state)=>{
       let note = toNoteString(state.quarterNotes[state.activePosition])
-      if (state.isPlaySynth) synth.triggerAttackRelease(note, "8n");
+      if (state.isPlaySynth) synth.triggerAttackRelease(note, "8n","+0");
 
     },
     switchLoop:(state)=>{
@@ -271,6 +283,7 @@ export const {
   secToActivePosition,
   moveSeek,
   changeSpeed,
+  changeVolume,
 } = counterSlice.actions;
 
 // The function below is called a selector and allows us to select a value from
