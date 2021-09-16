@@ -8,7 +8,13 @@ import * as serviceWorker from './serviceWorker';
 
 import * as Tone from 'tone'
 import music from "./music2.mp3";
-import {build, playActiveToneBySoft, secToActivePosition, shiftActivePosition} from "./features/counter/counterSlice";
+import {
+  build,
+  playActiveToneBySoft,
+  secToActivePosition,
+  setSeq,
+  shiftActivePosition
+} from "./features/counter/counterSlice";
 
 //Tone.js------------------------------
 let musicLength=0
@@ -38,27 +44,39 @@ player.loop = true;
 player.autostart = false;
 player.isPlay=false
 player.volume.value=-18
+let seq =new Tone.Sequence((time, note) => {
+  synth.triggerAttackRelease(note, 0.1, time);
+  // subdivisions are given as subarrays
+}, [0]);
+
+export const setSoftSynthSequence=(notes)=>{
+  let i =0
+  let seqs = []
+  for(let arg of notes){
+    seqs.push(toNoteString(arg))
+    seqs.push(0)
+  }
+  seq.events=seqs
+}
 
 //シークバーによる再生を、シークバーの進捗と四分音符ボタンの位置に同期させるFunction
 export const playWithProgress = (isLoop,start,end)=>{
 
   if(!player.isPlay){
-    let interval = 0.2
 
+    let interval = 0.2
+    let position =0
     Tone.Transport.scheduleRepeat((time) => {
       //再生状況をプログレスバーに反映するためのコールバック
       //ToDO:コールバックでstatusを確認して、stoppedならもっかい再生という
       //処理に変更すればシンプルかもしれない。
+
       if(!player.isPlay) {
         //再生開始時
 
         if(isLoop){
           //ループがTrue時は、stop/startが効かない。setLoopPointsで再生
-          /*
-          player.setLoopPoints(start,end)
-          player.start()
-           */
-          console.log(0)
+
           player.setLoopPoints(start, end)
           player.start()
 
@@ -68,6 +86,10 @@ export const playWithProgress = (isLoop,start,end)=>{
         }
         player.isPlay = true
         player.sec = start
+
+        //store.dispatch(setSeq())
+        //seq.start()
+
       }else{
         //再生中
         player.sec += interval
@@ -75,6 +97,7 @@ export const playWithProgress = (isLoop,start,end)=>{
         if(player.sec>=end) player.sec = start
         //ActivePositionを更新
         store.dispatch(secToActivePosition(player.sec))
+
       }
       if (player.state=='stopped'){
         //何らかの処理でplayerが止まったら、ちゃんと止める
@@ -83,7 +106,9 @@ export const playWithProgress = (isLoop,start,end)=>{
         player.isPlay = false
       }
 
+
     }, interval, 0);
+
   }else{
     //すでに再生中に呼ばれたら、止める
     player.isPlay=false
@@ -99,7 +124,7 @@ export const playWithProgress = (isLoop,start,end)=>{
 //})//.start(0);
 
 Tone.Transport.scheduleRepeat((time) => {
-  store.dispatch(playActiveToneBySoft())
+   store.dispatch(playActiveToneBySoft(time))
 }, "4n");
 
 export const synth = new Tone.Synth().toDestination();

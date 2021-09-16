@@ -1,6 +1,6 @@
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
 import { fetchCount } from './counterAPI';
-import {player, synth, toNoteString, loop, now, playWithProgress} from '../../index'
+import {player, synth, toNoteString, loop, now, playWithProgress, setSoftSynthSequence} from '../../index'
 import * as Tone from 'tone'
 
 const initialState = {
@@ -21,6 +21,13 @@ const initialState = {
   audioProgressSec:0,
   speed:1.0,
   volume:50,
+  newStart:0,
+  newEnd:0,
+  newProgress:0,
+  newStoppedTime:0,
+  newLength:0,
+
+
 };
 
 
@@ -44,6 +51,8 @@ export const counterSlice = createSlice({
   initialState,
   // The `reducers` field lets us define reducers and generate associated actions
   reducers: {
+    setSeq:(state)=>{
+    },
     changeSpeed:(state,action)=>{
       let rate = action.payload
       state.speed = rate
@@ -102,12 +111,13 @@ export const counterSlice = createSlice({
     },
     switchPlay:(state)=>{
       if (player.state=='stopped'){
-
+        //停止中
         player.start()
         player.isPlay=true
         state.isPlay=true
         Tone.Transport.start();
       }else{
+        //再生中
         player.stop()
         player.isPlay=false
         state.isPlay=false
@@ -218,16 +228,18 @@ export const counterSlice = createSlice({
       state.quarterNotes[i] = state.quarterNotes[i]+shift
       let note = toNoteString(state.quarterNotes[i]+shift)
       synth.triggerAttackRelease(note, "8n");
+
+      //debug
+      setSoftSynthSequence(state.quarterNotes)
     },
     playToneBySoft:(state,action)=>{
       let note = toNoteString(action.payload)
       if (state.isPlaySynth) synth.triggerAttackRelease(note, "8n");
       //sub function
     },
-    playActiveToneBySoft:(state)=>{
+    playActiveToneBySoft:(state,action)=>{
       let note = toNoteString(state.quarterNotes[state.activePosition])
-      if (state.isPlaySynth) synth.triggerAttackRelease(note, "8n","+0");
-
+      //if (state.isPlaySynth) synth.triggerAttackRelease(note, "8n",action.payload);
     },
     switchLoop:(state)=>{
       state.isLoop = !state.isLoop
@@ -283,7 +295,7 @@ export const {
   secToActivePosition,
   moveSeek,
   changeSpeed,
-  changeVolume,
+  changeVolume,setSeq,
 } = counterSlice.actions;
 
 // The function below is called a selector and allows us to select a value from
