@@ -16,7 +16,7 @@ import {
   switchPlaySynth,
   fileInput,
   playBySeek,
-  switchPlayBySeek, moveSeek,changeExpandAfter,changeExpandBefore,changeSpeed,changeVolume
+  switchPlayBySeek, moveSeek, changeExpandAfter, changeExpandBefore, changeSpeed, changeVolume, newTest,testSwitch
 } from './counterSlice';
 import styles from './Counter.module.css';
 import {Container,Row,Col} from "react-bootstrap";
@@ -439,6 +439,12 @@ export function Counter() {
           </Col>
           <Col xs={8} md={6}>
             Advanced settings. Expand play range
+            <button
+            onClick={()=>dispatch(newTest())}
+            >test</button>
+            <button
+              onClick={()=>dispatch(testSwitch())}
+            >test2</button>
             <Row>
               <Col className={"px-0"} >
                 <span

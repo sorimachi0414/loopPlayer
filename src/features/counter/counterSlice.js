@@ -1,6 +1,16 @@
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
 import { fetchCount } from './counterAPI';
-import {player, synth, toNoteString, loop, now, playWithProgress, setSoftSynthSequence} from '../../index'
+import {
+  player,
+  synth,
+  toNoteString,
+  loop,
+  now,
+  playWithProgress,
+  setSoftSynthSequence,
+  testRun,
+  resumeTest, synthScore
+} from '../../index'
 import * as Tone from 'tone'
 
 const initialState = {
@@ -51,6 +61,13 @@ export const counterSlice = createSlice({
   initialState,
   // The `reducers` field lets us define reducers and generate associated actions
   reducers: {
+    newTest:(state)=>{
+      let array=state.quarterNotes.map(x=>toNoteString(x))
+      testRun(4,7,array)
+    },
+    testSwitch:(state)=>{
+      resumeTest()
+    },
     setSeq:(state)=>{
     },
     changeSpeed:(state,action)=>{
@@ -295,7 +312,7 @@ export const {
   secToActivePosition,
   moveSeek,
   changeSpeed,
-  changeVolume,setSeq,
+  changeVolume,setSeq,newTest,testSwitch
 } = counterSlice.actions;
 
 // The function below is called a selector and allows us to select a value from

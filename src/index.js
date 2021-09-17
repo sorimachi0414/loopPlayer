@@ -49,6 +49,83 @@ let seq =new Tone.Sequence((time, note) => {
   // subdivisions are given as subarrays
 }, [0]);
 
+//refactoring
+export const newPlayer = new Tone.Player(music,()=>musicOnLoad()).toDestination();
+newPlayer.loop = false;
+newPlayer.autostart = false;
+newPlayer.isPlay=false
+newPlayer.volume.value=-18
+
+
+export let synthScore=[]
+let tickReso = 32
+export const testRun = (startStep,endStep,score)=>{
+  let tick =0
+  let bpm =113
+  let tickParStep = tickReso / 4
+
+  let startSec = startStep *60/bpm
+  let endTick = endStep * tickParStep
+  let isDispatched = true
+  let isLoop=true
+
+
+
+  Tone.Transport.scheduleRepeat((time) => {
+    let step= Math.floor(tick/tickParStep)+startStep
+
+        let obj={}
+        obj.flgBeatPoint = true
+        obj.doSoftSynth = true
+
+    if (newPlayer.state == "stopped" && (isDispatched || isLoop)) {
+      //停止中
+      newPlayer.start(time,startSec,newPlayer.buffer.duration)
+      isDispatched=false
+    } else {
+      //再生中
+
+      if (obj.progress >= obj.end) {
+
+        if (obj.isLoop) {
+          //戻す
+        } else {
+          //再生停止
+        }
+      }
+    }
+    //Synth part
+    if (tick%tickParStep==0) {
+      if (obj.doSoftSynth) {
+        //Play soft Synth
+        synth.triggerAttackRelease(score[step], 0.3, time);
+      }
+    }
+
+    //戻す
+    if(step>endStep){
+      newPlayer.stop()
+      tick=0
+      Tone.Transport.stop()
+    }
+    tick+=1
+  }, "32n", 0)
+  Tone.Transport.bpm.value=113
+  Tone.Transport.start()
+}
+
+export const resumeTest=()=>{
+  console.log('seconds',Tone.Transport.seconds)
+  if(newPlayer.state=="stopped"){
+
+    Tone.Transport.start()
+    newPlayer.start()
+  }else {
+    Tone.Transport.stop()
+    newPlayer.stop()
+  }
+}
+
 export const setSoftSynthSequence=(notes)=>{
   let i =0
   let seqs = []
@@ -122,11 +199,11 @@ export const playWithProgress = (isLoop,start,end)=>{
 //export const loop = new Tone.Loop((time) => {
   //store.dispatch(playActiveToneBySoft())
 //})//.start(0);
-
+/*
 Tone.Transport.scheduleRepeat((time) => {
    store.dispatch(playActiveToneBySoft(time))
 }, "4n");
-
+*/
 export const synth = new Tone.Synth().toDestination();
 synth.volume.value=0
 
