@@ -13,7 +13,7 @@ import {
   playActiveToneBySoft,
   secToActivePosition,
   setSeq,
-  shiftActivePosition
+  shiftActivePosition,setIsPlay
 } from "./features/counter/counterSlice";
 
 //Tone.js------------------------------
@@ -21,21 +21,20 @@ let musicLength=0
 let tempo,note4n,note1m,note2m
 
 let musicOnLoad=()=>{
-  console.log(player.loaded)
-  console.log('loaded')
-
-  musicLength = player.buffer.duration
+  musicLength = newPlayer.buffer.duration
   tempo=130
   note4n = 60/tempo
   note1m = 4*60/tempo
   note2m = 2*4*60/tempo
-  /*
-  let numberOf4n=Math.ceil(musicLength*tempo/60)
-  console.log(numberOf4n)
-   */
+
   store.dispatch(build(musicLength))
-  //dispatch(build(numberOf4n))
 }
+//refactoring
+export const newPlayer = new Tone.Player(music,()=>musicOnLoad()).toDestination();
+newPlayer.loop = false;
+newPlayer.autostart = false;
+newPlayer.isPlay=false
+newPlayer.volume.value=-18
 
 //主音源再生用のオブジェクト
 export const player = new Tone.Player(music,()=>musicOnLoad()).toDestination();
@@ -48,6 +47,130 @@ let seq =new Tone.Sequence((time, note) => {
   synth.triggerAttackRelease(note, 0.1, time);
   // subdivisions are given as subarrays
 }, [0]);
+
+
+
+
+export let synthScore=[]
+let tickReso = 32
+
+//get score from state
+let score
+let isLoop
+let isPlaySynth
+let expandBefore
+let expandAfter
+let wait
+let bpm
+let activePosition
+
+let reloadState=()=>{
+  let counter = store.getState().counter
+
+  isLoop = counter.isLoop
+  isPlaySynth = counter.isPlaySynth
+  expandBefore = counter.expandBefore
+  expandAfter = counter.expandAfter
+  wait = counter.wait
+  bpm = counter.bpm
+  activePosition = counter.activePosition
+
+  let rawScore = counter.quarterNotes
+  score = rawScore.map(x=>toNoteString(x))
+}
+store.subscribe(reloadState)
+
+export const testRun = (startStep,endStep)=>{
+  //startStep<0 then play from activePosition
+  //endStep<0 then stop at musicLength
+  //bpm = [beat/minutes] 1beat = 60/bpm sec
+
+  //definitions
+  let tickParStep = tickReso / 4 //[tick/step]
+  let secToTick=(sec)=> (sec/(60/bpm))*tickParStep
+
+  //Initialize
+  newPlayer.stop()
+  Tone.Transport.cancel()
+
+  let musicLength = newPlayer.buffer.duration
+  let maxStep = ~~(musicLength / (60/bpm))
+  let maxTick = maxStep * tickParStep
+  let tick =0
+
+  startStep = (startStep<0) ? activePosition : startStep
+  let startSec = startStep *60/bpm + wait - expandBefore
+  startSec = (startSec<0) ? 0 : (startSec>musicLength)? musicLength : startSec
+  endStep = (endStep<0) ? maxStep: endStep
+  let extraAfterTick = Math.floor(secToTick(expandAfter))
+  let extraBeforeTick = Math.floor(secToTick(expandBefore))
+  let endTick = (endStep-startStep)*tickParStep+extraAfterTick +extraBeforeTick
+
+  let absInitTick = secToTick(startSec)
+  let isDispatched = true
+
+  //CallBack
+  Tone.Transport.scheduleRepeat((time) => {
+
+    let step= Math.floor(tick/tickParStep)+startStep
+
+    //music Part
+    if (newPlayer.state == "stopped" && (isDispatched && isLoop) ) {
+      //停止中
+      newPlayer.start(time,startSec,musicLength)
+      isDispatched=false
+      store.dispatch(setIsPlay(true))
+    } else {
+      //再生中
+      //store.dispatch(setIsPlay(false))
+
+    }
+    //Synth part
+    if (tick%tickParStep==0) {
+      store.dispatch(shiftActivePosition(step))
+      if (isPlaySynth) {
+        //Play soft Synth
+        synth.triggerAttackRelease(score[step], 0.3, time);
+      }
+    }
+
+    //時間を進める処理
+    tick+=1
+    //プログレスバーを進める処理
+
+
+    //戻す
+
+    if(tick>=endTick){
+      console.log(tick,endTick)
+      console.log('end')
+      newPlayer.stop()
+      tick=0
+      step=startStep
+      if(!isLoop) Tone.Transport.stop()
+      isDispatched=true
+    }
+
+  }, "32n", 0)
+  Tone.Transport.bpm.value=bpm
+  Tone.Transport.start()
+}
+
+
+export const resumeTest=()=>{
+  console.log('seconds',Tone.Transport.seconds)
+  if(newPlayer.state=="stopped"){
+
+    Tone.Transport.start()
+    newPlayer.start()
+  }else {
+    Tone.Transport.stop()
+    newPlayer.stop()
+  }
+}
+
+
+
 
 export const setSoftSynthSequence=(notes)=>{
   let i =0
@@ -122,11 +245,11 @@ export const playWithProgress = (isLoop,start,end)=>{
 //export const loop = new Tone.Loop((time) => {
   //store.dispatch(playActiveToneBySoft())
 //})//.start(0);
-
+/*
 Tone.Transport.scheduleRepeat((time) => {
    store.dispatch(playActiveToneBySoft(time))
 }, "4n");
-
+*/
 export const synth = new Tone.Synth().toDestination();
 synth.volume.value=0
 
