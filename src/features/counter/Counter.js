@@ -19,8 +19,8 @@ import {
   switchLoop,
   switchPlaySynth,
   fileInput,
-  playBySeek,
-  switchPlayBySeek, moveSeek, changeExpandAfter, changeExpandBefore, changeSpeed, changeVolume, newTest,testSwitch
+  playBySeek, clickedPosition,
+  switchPlayBySeek, moveSeek, changeExpandAfter, changeExpandBefore, changeSpeed, changeVolume, setClickedPosition,
 } from './counterSlice';
 import styles from './Counter.module.css';
 import {Container, Row, Col, Button,Overlay} from "react-bootstrap";
@@ -29,6 +29,8 @@ import { faPause, faPauseCircle, faPlay, faPlayCircle, faStop,faCoffee} from "@f
 import {faFileAudio} from "@fortawesome/free-regular-svg-icons";
 import {faCogs} from "@fortawesome/free-solid-svg-icons/faCogs";
 import {faVolumeUp} from "@fortawesome/free-solid-svg-icons/faVolumeUp";
+import {faPowerOff} from "@fortawesome/free-solid-svg-icons/faPowerOff";
+import {faClock} from "@fortawesome/free-regular-svg-icons/faClock";
 
 let lastClick=0
 let tempo = 100
@@ -90,7 +92,7 @@ const InputCuePoint=()=>{
         <span
           className="input-group-text px-1" id="inputGroup-sizing-sm"
         >
-          Cue point
+          Cue point [s]
         </span>
       </Col>
       <Col>
@@ -217,7 +219,7 @@ let ToggleLoop=()=>{
   const isLoop = useSelector((state) => state.counter.isLoop)
 
   return(
-    <div>
+    <div className={"text-start"}>
       <input
         className={"form-check-input m-1"}
         id={'loop'}
@@ -228,7 +230,7 @@ let ToggleLoop=()=>{
         value={0}
       />
     <label
-      className={"form-check-label text-left"}
+      className={"form-check-label text-left ms-1"}
       htmlFor={"loop"}
       style={fontObject(0.5,2,1)}
     >
@@ -243,7 +245,7 @@ const ToggleSynth=()=>{
   const isPlaySynth = useSelector((state) => state.counter.isPlaySynth)
 
   return(
-    <div>
+    <div className={"text-start"}>
       <input
         className={"form-check-input m-1"}
         id={'synth'}
@@ -254,7 +256,7 @@ const ToggleSynth=()=>{
         value={0}
       />
       <label
-        className={"form-check-label"}
+        className={"form-check-label ms-1"}
         htmlFor={"synth"}
         style={fontObject(0.5,2,1)}
       >
@@ -273,6 +275,7 @@ export function Counter() {
   const expand = useSelector((state) => state.counter.expand)
   const numberOf4n = useSelector((state) => state.counter.numberOf4n)
   const activePosition = useSelector((state) => state.counter.activePosition)
+  const clickedPosition = useSelector((state) => state.counter.clickedPosition)
   const quarterNotes = useSelector((state) => state.counter.quarterNotes)
   const dispatch = useDispatch();
   const audioLength = useSelector((state) => state.counter.musicLength)
@@ -374,7 +377,7 @@ export function Counter() {
       <Col xs={12} className={"px-sm-0 px-4 mx-sm-0 mb-2"} id="ParentOfTimeAndButton">
         <Row className={"justify-content-center"} id="row">
           <Col xs={12} lg={12} className={"px-sm-0 py-sm-0 text-start offset-sm-2"}>
-            {timeString}-
+            <FontAwesomeIcon icon={faClock}/>{timeString}-
           </Col>
         </Row>
         <Row xs={12} className={"px-0 mx-0"} id='row2'>
@@ -402,19 +405,21 @@ export function Counter() {
       dispatch(switchPlay())
       event.preventDefault()
     }else if (event.code=='ArrowRight') {
-      dispatch(playThis({a:activePosition+1,b:activePosition+2}))
-      dispatch(shiftActivePosition(activePosition + 1))
+      dispatch(playThis({a:clickedPosition+1,b:clickedPosition+2}))
+      dispatch(shiftActivePosition(clickedPosition + 1))
+      dispatch(setClickedPosition(clickedPosition + 1))
       event.preventDefault()
     }else if (event.code=='ArrowLeft') {
-      dispatch(playThis({a:activePosition-1,b:activePosition}))
-      dispatch(shiftActivePosition(activePosition - 1))
+      dispatch(playThis({a:clickedPosition-1,b:clickedPosition}))
+      dispatch(shiftActivePosition(clickedPosition - 1))
+      dispatch(setClickedPosition(clickedPosition - 1))
       event.preventDefault()
     }else if (event.code=='ArrowUp') {
-      dispatch(shiftQuarterNote({position:activePosition,shift:1}))
+      dispatch(shiftQuarterNote({position:clickedPosition,shift:1}))
       //dispatch(shiftActivePosition(activePosition - 1))
       event.preventDefault()
     }else if (event.code=='ArrowDown') {
-      dispatch(shiftQuarterNote({position:activePosition,shift:-1}))
+      dispatch(shiftQuarterNote({position:clickedPosition,shift:-1}))
       //dispatch(shiftActivePosition(activePosition - 1))
       event.preventDefault()
     }
@@ -443,103 +448,115 @@ export function Counter() {
 
     return (
       <>
-        <button className={"btn btn-outline-dark"} ref={target} onClick={() => setShow(!show)}>
+        <a tabIndex={0} className={"btn btn-outline-dark p-1 p-sm-2"} ref={target} onClick={() => setShow(!show)}>
           <FontAwesomeIcon
             icon={faCogs}
-            size={"2x"}
+            style={{
+              fontSize:"clamp(1rem,5vw,2rem)",
+            }}
             color={"#888"}
           />
-        </button>
+        </a>
         <Overlay target={target.current} show={show} placement="top">
           {({ placement, arrowProps, show: _show, popper, ...props }) => (
-            <div
-              {...props}
-              style={{
-                backgroundColor: 'rgba(255,255,255, 0.9)',
-                padding: '',
-                color: 'black',
-                borderRadius: 3,
-                maxWidth:'50%',
-                ...props.style,
-              }}
-            >
-              <Container>
-                <Row>
-                  <Col className={"text-start"}>
-                    <b>Additional Settings.</b>
-                  </Col>
-                  <Col xs={12} className={""}>
-                    <Row className={"px-2"}>
-
-                      <Col xs={12}>
-                        Expand play range.
+            <Container>
+              <Row>
+                <Col
+                  {...props}
+                  style={{
+                    backgroundColor: 'rgba(255,255,255, 0.9)',
+                    padding: '',
+                    color: 'black',
+                    borderRadius: 3,
+                    border:"solid 1px #000",
+                    maxWidth:'50%',
+                    ...props.style,
+                  }}
+                  className={"mb-2"}
+                  xs={7}
+                  sm={6}
+                  md={4}
+                  lg={3}
+                  xl={2}
+                >
+                    <Row>
+                      <Col className={"text-start"}>
+                        <b>Additional Settings</b>
                       </Col>
+                      <Col xs={12} className={""}>
+                        <Row className={"px-2"}>
 
-                      <Col xs={"auto"} id={"1ofRow"}>
-                        <Row>
-                          <Col>
-                            <span
-                              className="input-group-text px-1" id="inputGroup-sizing-sm">
-                               Before
-                            </span>
+                          <Col xs={12}>
+                            Expand play range.
                           </Col>
-                          <Col  >
-                            <input
-                              type="number"
-                              className="form-control"
-                              aria-label="Sizing example input"
-                              aria-describedby="inputGroup-sizing-sm"
-                              defaultValue={0}
-                              type="number"
-                              step='0.1'
-                              onChange={(e) => dispatch(changeExpandBefore(e.target.value))}
-                            />
+
+                          <Col xs={"auto"} id={"1ofRow"}>
+                            <Row>
+                              <Col>
+                                <span
+                                  className="input-group-text px-1" id="inputGroup-sizing-sm">
+                                   Before [s]
+                                </span>
+                              </Col>
+                              <Col  >
+                                <input
+                                  type="number"
+                                  className="form-control"
+                                  aria-label="Sizing example input"
+                                  aria-describedby="inputGroup-sizing-sm"
+                                  defaultValue={0}
+                                  type="number"
+                                  step='0.1'
+                                  onChange={(e) => dispatch(changeExpandBefore(e.target.value))}
+                                />
+                              </Col>
+                            </Row>
                           </Col>
+
+                          <Col xs={"auto"} className={"pb-2"}>
+                            <Row>
+                              <Col className={""}>
+                                <span
+                                  className="input-group-text px-1" id="inputGroup-sizing-sm">
+                                  After [s]
+                                </span>
+                              </Col>
+                              <Col>
+                                <input
+                                  type="number"
+                                  className="form-control"
+                                  aria-label="Sizing example input"
+                                  aria-describedby="inputGroup-sizing-sm"
+                                  defaultValue={0}
+                                  type="number"
+                                  step='0.1'
+                                  onChange={(e) => dispatch(changeExpandAfter(e.target.value))}
+                                />
+                              </Col>
+                            </Row>
+                          </Col>
+
+                          <Col xs={12}>
+                            Change the beginning point.
+                          </Col>
+                          <Col xs={"auto"} className={"pb-2"}>
+                            <InputCuePoint />
+                          </Col>
+
+                          <Col xs={12}>
+                            Slow down the music speed.
+                            0.5/ 0.75/ 1.0
+                          </Col>
+                          <Col xs={"auto"} className={"pb-2"}>
+                            <ChangeSpeed />
+                          </Col>
+
                         </Row>
                       </Col>
-
-                      <Col xs={"auto"} className={"pb-2"}>
-                        <Row>
-                          <Col className={""}>
-                            <span
-                              className="input-group-text px-1" id="inputGroup-sizing-sm">
-                              After
-                            </span>
-                          </Col>
-                          <Col>
-                            <input
-                              type="number"
-                              className="form-control"
-                              aria-label="Sizing example input"
-                              aria-describedby="inputGroup-sizing-sm"
-                              defaultValue={0}
-                              type="number"
-                              step='0.1'
-                              onChange={(e) => dispatch(changeExpandAfter(e.target.value))}
-                            />
-                          </Col>
-                        </Row>
-                      </Col>
-
-                      <Col xs={12}>
-                        Change the beginning point.
-                      </Col>
-                      <Col xs={"auto"} className={"pb-2"}>
-                        <InputCuePoint />
-                      </Col>
-
-                      <Col xs={12}>
-                        Slow down the music speed.
-                      </Col>
-                      <Col xs={"auto"} className={"pb-5"}>
-                        <ChangeSpeed />
-                      </Col>
-
                     </Row>
-                  </Col>
-                </Row>
-              </Container>
-            </div>
+                </Col>
+              </Row>
+            </Container>
           )}
         </Overlay>
       </>
@@ -548,64 +565,33 @@ export function Counter() {
 
   return (
     <div className={"mb-5"}>
-    <Container className={"justify-content-center mb-4 px-0"}>
-        <Row id="seekbars" className={"text-left justify-content-center"}>
-          <Col xs={12} className={"mb-2"}>Load your music file. Or you can test sample music file</Col>
-          <Col xs={12} className={"mb-4"}>
-            <input
-              type="file"
-              ref={uploadFile}
-              onChange={()=>dispatch(fileInput(uploadFile))}
+    <Container className={"justify-content-center mb-4"}>
+        <Row id="intro" className={"text-left justify-content-center bg-success text-light mb-2 p-2"}>
+          <Col xs={12} sm={"auto"} className={" align-self-center"}>
+            <FontAwesomeIcon
+              icon={faPowerOff}
+              size={"1.4rem"}
             />
+            <span className={"fw-bold px-2"} style={{fontSize:"1.2rem"}}>
+              Get started
+            </span>
+
           </Col>
-          <Col xs={8} md={6}>
-            Advanced settings. Expand play range
-            <button
-            onClick={()=>dispatch(newTest())}
-            >test</button>
-            <button
-              onClick={()=>dispatch(testSwitch())}
-            >test2</button>
+          <Col xs={12} sm={6} className={""}>
             <Row>
-              <Col className={"px-0"} >
-                <span
-                  className="input-group-text px-1" id="inputGroup-sizing-sm">
-                   Before
-                </span>
+              <Col xs={12} className={" "}>
+                Load your music file. Or you can test sample music file
               </Col>
-              <Col  >
+              <Col xs={12} className={""}>
                 <input
-                  type="number"
-                  className="form-control"
-                  aria-label="Sizing example input"
-                  aria-describedby="inputGroup-sizing-sm"
-                  defaultValue={0}
-                  type="number"
-                  step='0.1'
-                  onChange={(e) => dispatch(changeExpandBefore(e.target.value))}
-                />
-              </Col>
-              <Col className={"px-0"}>
-                <span
-                  className="input-group-text px-1" id="inputGroup-sizing-sm">
-                  After
-                </span>
-              </Col>
-              <Col>
-                <input
-                  type="number"
-                  className="form-control"
-                  aria-label="Sizing example input"
-                  aria-describedby="inputGroup-sizing-sm"
-                  defaultValue={0}
-                  type="number"
-                  step='0.1'
-                  onChange={(e) => dispatch(changeExpandAfter(e.target.value))}
+                  type="file"
+                  ref={uploadFile}
+                  onChange={()=>dispatch(fileInput(uploadFile))}
                 />
               </Col>
             </Row>
-
           </Col>
+
         </Row>
       <Row className={"justify-content-center"}>
         <Col xs={12} sm={12} lg={10} className={"px-0 mx-0"}>
@@ -627,7 +613,9 @@ export function Counter() {
               <Col xs={2} sm={2} md={1} id={'resumeButton'}>
                 <FontAwesomeIcon
                   icon={globalPlayStopLabel}
-                  size={"4x"}
+                  style={{
+                    fontSize:"clamp(2rem,10vw,4rem)",
+                  }}
                   color={"#0077ff"}
                  onClick={()=>dispatch(switchPlay())}
                 />
@@ -649,18 +637,25 @@ export function Counter() {
                   />
                 </div>
                 <div>
-                  <FontAwesomeIcon
-                    icon={playStopLabel}
-                    color={"#179317"}
-                    size={"2x"}
-                    className={"my-0 py-0 mx-1"}
+                  <button
+                    className={"btn btn-outline-dark p-1"}
                     onClick={()=>dispatch(switchPlayBySeek())}
-                  />
-                  <FontAwesomeIcon
-                    icon={faFileAudio}
-                    size={"2x"}
-                    color={"#179317"}
-                  />
+                      >
+                    <FontAwesomeIcon
+                      icon={playStopLabel}
+                      color={"#179317"}
+                      size={"2x"}
+                      style={fontObject(1,3,2)}
+                      className={"my-0 py-0 mx-1"}
+                    />
+                    <FontAwesomeIcon
+                      icon={faFileAudio}
+                      size={"2x"}
+                      style={fontObject(1,3,2)}
+
+                      color={"#179317"}
+                    />
+                  </button>
                   <span
                     style={{
                         marginLeft: 5 + "px",
@@ -677,10 +672,10 @@ export function Counter() {
                 <ToggleLoop />
                 <ToggleSynth />
               </Col>
-              <Col xs={4} sm={4} md={3} lg={2} className={" order-2 order-md-1"}>
+              <Col xs={"auto"} sm={4} md={3} lg={2} className={" order-2 order-md-1"}>
                 <InputBPM />
               </Col>
-              <Col xs={4} sm={4} md={2} lg={2} className={"  order-3 order-md-2"}>
+              <Col xs={"auto"} sm={4} md={2} lg={2} className={"  order-3 order-md-2"}>
                 <Volume />
               </Col>
               <Col xs={2} sm={2} md={1} lg={1} className={" p-0 order-1 order-md-3"}>

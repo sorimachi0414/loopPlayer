@@ -13,7 +13,7 @@ import {
   playActiveToneBySoft,
   secToActivePosition,
   setSeq,
-  shiftActivePosition,setIsPlay
+  shiftActivePosition, setIsPlay, setClickedPosition
 } from "./features/counter/counterSlice";
 
 //Tone.js------------------------------
@@ -52,7 +52,7 @@ let seq =new Tone.Sequence((time, note) => {
 
 
 export let synthScore=[]
-let tickReso = 32
+let tickReso = 64
 
 //get score from state
 let score
@@ -151,7 +151,7 @@ export const testRun = (startStep,endStep)=>{
       isDispatched=true
     }
 
-  }, "32n", 0)
+  }, tickReso+"n", 0)
   Tone.Transport.bpm.value=bpm
   Tone.Transport.start()
 }
@@ -197,6 +197,7 @@ export const playWithProgress = (isLoop,start,end)=>{
 
       if(!player.isPlay) {
         //再生開始時
+
 
         if(isLoop){
           //ループがTrue時は、stop/startが効かない。setLoopPointsで再生

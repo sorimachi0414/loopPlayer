@@ -12,7 +12,6 @@ function App() {
       <h1>Section Loop Player</h1>
       <img src={logo} className="img-fluid App-logo"　 alt="logo" />
         <Counter />
-
     </div>
   );
   //<img src={logo} className="App-logo" alt="logo" />

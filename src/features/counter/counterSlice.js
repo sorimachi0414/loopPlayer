@@ -5,17 +5,16 @@ import {
   newPlayer,
   synth,
   toNoteString,
-  loop,
-  now,
   playWithProgress,
   setSoftSynthSequence,
   testRun,
-  resumeTest, synthScore
+  resumeTest,
 } from '../../index'
 import * as Tone from 'tone'
 
 const initialState = {
   activePosition:0,
+  clickedPosition:0,
   isLoop:true,
   isPlay:false,
   isPlaySynth:false,
@@ -39,13 +38,6 @@ const initialState = {
   newLength:0,
 };
 
-
-
-// The function below is called a thunk and allows us to perform async logic. It
-// can be dispatched like a regular action: `dispatch(incrementAsync(10))`. This
-// will call the thunk with the `dispatch` function as the first argument. Async
-// code can then be executed and other actions can be dispatched. Thunks are
-// typically used to make async requests.
 export const incrementAsync = createAsyncThunk(
   'counter/fetchCount',
   async (amount) => {
@@ -68,9 +60,8 @@ export const counterSlice = createSlice({
       let startStep = action.payload.a
       let endStep = action.payload.b
       state.activePosition=startStep
+      state.clickedPosition = startStep
       testRun(startStep,endStep)
-
-
       /*
       //Todo: ボタンでプログレスバーを表現する？
       let a = action.payload.a
@@ -110,13 +101,6 @@ export const counterSlice = createSlice({
       state.activePosition=a
 
        */
-    },
-    newTest:(state)=>{
-      let array=state.quarterNotes.map(x=>toNoteString(x))
-      testRun(4,7,array)
-    },
-    testSwitch:(state)=>{
-      resumeTest()
     },
     changeSpeed:(state,action)=>{
       let rate = action.payload
@@ -160,7 +144,6 @@ export const counterSlice = createSlice({
         resumeTest()
         state.isPlay=false
       }
-
         /*
         player.user=Tone.now()
         if (player.state=='stopped'){
@@ -187,19 +170,18 @@ export const counterSlice = createSlice({
 
         }
         */
-
     },
     switchPlay:(state)=>{
       if (player.state=='stopped'){
         //停止中
-        player.start()
-        player.isPlay=true
+        newPlayer.start()
+        newPlayer.isPlay=true
         state.isPlay=true
         Tone.Transport.start();
       }else{
         //再生中
-        player.stop()
-        player.isPlay=false
+        newPlayer.stop()
+        newPlayer.isPlay=false
         state.isPlay=false
         Tone.Transport.stop()
       }
@@ -216,7 +198,9 @@ export const counterSlice = createSlice({
     },
     moveSeek:(state,action)=>{
       state.activePosition = action.payload
+      state.clickedPosition = action.payload
       testRun(action.payload,-1)
+
 
       let sec = state.musicLength * action.payload / state.numberOf4n
       if(player.isPlay){
@@ -260,6 +244,9 @@ export const counterSlice = createSlice({
     secToActivePosition:(state,action)=>{
       let sec = action.payload
       state.activePosition = Math.floor(state.numberOf4n * sec / state.musicLength)
+    },
+    setClickedPosition:(state,action)=>{
+      state.clickedPosition = action.payload
     },
     shiftActivePosition:(state,action)=>{
       state.activePosition=action.payload
@@ -337,8 +324,8 @@ export const {
   switchPlayBySeek,
   secToActivePosition,
   moveSeek,
-  changeSpeed,
-  changeVolume,setSeq,newTest,testSwitch,setIsPlay
+  changeSpeed,setClickedPosition,
+  changeVolume,setSeq,newTest,testSwitch,setIsPlay,clickedPosition,
 } = counterSlice.actions;
 
 // The function below is called a selector and allows us to select a value from
