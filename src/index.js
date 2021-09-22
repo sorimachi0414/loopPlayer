@@ -30,11 +30,24 @@ let musicOnLoad=()=>{
   store.dispatch(build(musicLength))
 }
 //refactoring
-export const newPlayer = new Tone.Player(music,()=>musicOnLoad()).toDestination();
+
+const soloA = new Tone.Solo();
+
+export const newPlayer = new Tone.Player(music,()=>musicOnLoad()).connect(soloA).toDestination();
 newPlayer.loop = false;
 newPlayer.autostart = false;
 newPlayer.isPlay=false
 newPlayer.volume.value=-18
+
+const soloB = new Tone.Solo();
+
+export const newPlayer2 = new Tone.Player(music,()=>musicOnLoad()).connect(soloB).toDestination();
+newPlayer2.loop = false;
+newPlayer2.autostart = false;
+newPlayer2.isPlay=false
+newPlayer2.volume.value=-18
+
+const soloC =new Tone.Solo().toDestination()
 
 //主音源再生用のオブジェクト
 export const player = new Tone.Player(music,()=>musicOnLoad()).toDestination();
@@ -52,7 +65,7 @@ let seq =new Tone.Sequence((time, note) => {
 
 
 export let synthScore=[]
-let tickReso = 64
+let tickReso = 32
 
 //get score from state
 let score
@@ -85,6 +98,8 @@ export const testRun = (startStep,endStep)=>{
   //endStep<0 then stop at musicLength
   //bpm = [beat/minutes] 1beat = 60/bpm sec
 
+  soloC.solo=true
+
   //definitions
   let tickParStep = tickReso / 4 //[tick/step]
   let secToTick=(sec)=> (sec/(60/bpm))*tickParStep
@@ -108,6 +123,12 @@ export const testRun = (startStep,endStep)=>{
 
   let absInitTick = secToTick(startSec)
   let isDispatched = true
+  let activeObject=newPlayer
+  let inactiveObject=newPlayer2
+  let activeSolo =soloA
+  let inactiveSolo = soloB
+  let flipBool = false
+  let isLoopDispatched=false
 
   //CallBack
   Tone.Transport.scheduleRepeat((time) => {
@@ -115,13 +136,31 @@ export const testRun = (startStep,endStep)=>{
     let step= Math.floor(tick/tickParStep)+startStep
 
     //music Part
-    if (newPlayer.state == "stopped" && (isDispatched && isLoop) ) {
+    if (newPlayer.state == "stopped888888" && (isDispatched && isLoop) ) {
       //停止中
       newPlayer.start(time,startSec,musicLength)
       isDispatched=false
       store.dispatch(setIsPlay(true))
     } else {
       //再生中
+      if(isDispatched || isLoopDispatched) {
+        if(isDispatched) {
+          flipBool = !flipBool
+        }
+        if(flipBool){
+          newPlayer.start(0, startSec, musicLength)
+          soloB.solo=false
+          soloA.solo=true
+        }else{
+          newPlayer2.start(0, startSec, musicLength)
+          soloA.solo=false
+          soloB.solo=true
+        }
+
+      }
+      isDispatched=false
+      isLoopDispatched=false
+
       //store.dispatch(setIsPlay(false))
 
     }
@@ -145,10 +184,13 @@ export const testRun = (startStep,endStep)=>{
       console.log(tick,endTick)
       console.log('end')
       newPlayer.stop()
+      newPlayer2.stop()
       tick=0
       step=startStep
       if(!isLoop) Tone.Transport.stop()
-      isDispatched=true
+      //debug//isDispatched=true
+      isLoopDispatched=true
+
     }
 
   }, tickReso+"n", 0)
