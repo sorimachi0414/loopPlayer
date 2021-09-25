@@ -1,14 +1,13 @@
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
 import { fetchCount } from './counterAPI';
 import {
-  player,
   newPlayer,
   synth,
   toNoteString,
   playWithProgress,
   setSoftSynthSequence,
   testRun,
-  resumeTest,
+  resumeTest, setSlicedBuffers,
 } from '../../index'
 import * as Tone from 'tone'
 
@@ -36,6 +35,8 @@ const initialState = {
   newProgress:0,
   newStoppedTime:0,
   newLength:0,
+  lastStartPoint:0,
+  lastEndPoint:0,
 };
 
 export const incrementAsync = createAsyncThunk(
@@ -62,6 +63,8 @@ export const counterSlice = createSlice({
       state.activePosition=startStep
       state.clickedPosition = startStep
       testRun(startStep,endStep)
+      state.lastStartPoint=startStep
+      state.lastEndPoint=endStep
       /*
       //Todo: ボタンでプログレスバーを表現する？
       let a = action.payload.a
@@ -172,7 +175,7 @@ export const counterSlice = createSlice({
         */
     },
     switchPlay:(state)=>{
-      if (player.state=='stopped'){
+      if (newPlayer.state=='stopped'){
         //停止中
         newPlayer.start()
         newPlayer.isPlay=true
@@ -201,7 +204,7 @@ export const counterSlice = createSlice({
       state.clickedPosition = action.payload
       testRun(action.payload,-1)
 
-
+      /*
       let sec = state.musicLength * action.payload / state.numberOf4n
       if(player.isPlay){
         console.log('moveseek')
@@ -213,7 +216,7 @@ export const counterSlice = createSlice({
         playWithProgress(state.isLoop,sec,state.musicLength)
         Tone.Transport.stop()
         Tone.Transport.start();
-      }
+      }*/
     },
 
     changeBpm:(state,action)=>{
@@ -221,11 +224,26 @@ export const counterSlice = createSlice({
       bpm = (bpm<1) ? 1 : bpm
       bpm = (bpm>999) ? 999 : bpm
       state.bpm=bpm
+      setSlicedBuffers(
+        newPlayer.buffer,
+        state.expandBefore,
+        state.expandAfter,
+        state.wait,
+        bpm,
+      )
       state.numberOf4n = Math.ceil(state.musicLength * state.bpm /60)
       Tone.Transport.bpm.value=bpm
     },
     changeWait:(state,action)=>{
       state.wait=Number(action.payload)
+      setSlicedBuffers(
+        newPlayer.buffer,
+        state.expandBefore,
+        state.expandAfter,
+        Number(action.payload),
+        state.bpm,
+      )
+      testRun(state.lastStartPoint,state.lastEndPoint)
     },
     changeVolume:(state,action)=>{
       let vol = Number(action.payload)
@@ -233,13 +251,31 @@ export const counterSlice = createSlice({
       let dB = -36 + 36*vol/100
       dB =(vol==0) ? -100:dB
       dB =(dB>0) ? 0 : dB
-      player.volume.value=dB
+      newPlayer.volume.value=dB
     },
     changeExpandBefore:(state,action)=>{
       state.expandBefore=Number(action.payload)
+      setSlicedBuffers(
+        newPlayer.buffer,
+        Number(action.payload),
+        state.expandAfter,
+        state.wait,
+        state.bpm,
+      )
+      testRun(state.lastStartPoint,state.lastEndPoint)
+
     },
     changeExpandAfter:(state,action)=>{
       state.expandAfter=Number(action.payload)
+      setSlicedBuffers(
+        newPlayer.buffer,
+        state.expandBefore,
+        Number(action.payload),
+        state.wait,
+        state.bpm,
+      )
+      testRun(state.lastStartPoint,state.lastEndPoint)
+
     },
     secToActivePosition:(state,action)=>{
       let sec = action.payload

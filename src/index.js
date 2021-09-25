@@ -20,12 +20,50 @@ import {
 let musicLength=0
 let tempo,note4n,note1m,note2m
 
+let slicedBuffers=[]
+
+export let setSlicedBuffers=(
+buf,
+expandBefore = store.getState().counter.expandBefore,
+expandAfter = store.getState().counter.expandAfter,
+wait = store.getState().counter.wait,
+bpm = store.getState().counter.bpm,
+  )=>{
+  console.log('start',performance.now())
+  let length = buf.duration
+
+  let step = 60/bpm
+
+  let buffers=[]
+
+  let sp=0+wait
+  let ep=step+wait
+
+  let bufIdx=0
+
+  while(ep<musicLength){
+    let spEx = sp-expandBefore
+    let epEx = ep+expandAfter
+    spEx = (spEx<0) ? 0 : (spEx>length) ? length :spEx
+    epEx = (epEx<0) ? 0 : (epEx>length) ? length :epEx
+
+    buffers[bufIdx]=      buf.slice(spEx,epEx)
+    sp+=step
+    ep+=step
+    bufIdx+=1
+  }
+
+  slicedBuffers=buffers
+  console.log('end',performance.now())
+}
+
 let musicOnLoad=()=>{
   musicLength = newPlayer.buffer.duration
   tempo=130
   note4n = 60/tempo
   note1m = 4*60/tempo
   note2m = 2*4*60/tempo
+  setSlicedBuffers(newPlayer.buffer)
 
   store.dispatch(build(musicLength))
 }
@@ -49,13 +87,19 @@ newPlayer2.volume.value=-18
 
 const soloC =new Tone.Solo().toDestination()
 
+const soloD = new Tone.Solo().toDestination() //debug
+
 //主音源再生用のオブジェクト
+/*
 export const player = new Tone.Player(music,()=>musicOnLoad()).toDestination();
 
 player.loop = true;
 player.autostart = false;
 player.isPlay=false
 player.volume.value=-18
+
+ */
+
 let seq =new Tone.Sequence((time, note) => {
   synth.triggerAttackRelease(note, 0.1, time);
   // subdivisions are given as subarrays
@@ -97,8 +141,16 @@ export const testRun = (startStep,endStep)=>{
   //startStep<0 then play from activePosition
   //endStep<0 then stop at musicLength
   //bpm = [beat/minutes] 1beat = 60/bpm sec
-
+  if(endStep==startStep) return null
   soloC.solo=true
+
+  //debug
+  if((endStep-startStep)==1){
+    newPlayer.buffer=slicedBuffers[startStep]
+    newPlayer.start(0)
+    return null
+    //slicedBuffers[startStep].connect(soloD).toDestination()
+  }
 
   //definitions
   let tickParStep = tickReso / 4 //[tick/step]
@@ -227,7 +279,7 @@ export const setSoftSynthSequence=(notes)=>{
 
 //シークバーによる再生を、シークバーの進捗と四分音符ボタンの位置に同期させるFunction
 export const playWithProgress = (isLoop,start,end)=>{
-
+  /*
   if(!player.isPlay){
 
     let interval = 0.2
@@ -283,6 +335,8 @@ export const playWithProgress = (isLoop,start,end)=>{
     Tone.Transport.stop()
   }
 
+   */
+
 }
 
 //ソフトシンセ用のブロック
@@ -312,8 +366,11 @@ export const toNoteString=(num)=>{
 export const timeColoned =(sec)=>{
   let date = new Date(null);
   date.setSeconds(sec); // specify value for SECONDS here
-  let result = date.toISOString().substr(14, 5);
-  return result
+  if(Number.isNaN(date.getTime())){
+    //to avoid a case date = Invalid Date
+    return 0
+  }
+  return date.toISOString().substr(14, 5);
 }
 
 //------------
