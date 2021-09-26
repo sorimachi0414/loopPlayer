@@ -12,7 +12,15 @@
     "react-redux": "^7.2.4",
     "react-scripts": "4.0.3",
     "tone": "^14.7.77",
-    "react-bootstrap": "^1.6.3"
+    "react-bootstrap": "^1.6.3",
+
+
+    "@fortawesome/fontawesome-svg-core": "^1.2.36",
+    "@fortawesome/free-regular-svg-icons": "^5.15.4",
+    "@fortawesome/free-solid-svg-icons": "^5.15.4",
+    "@popperjs/core": "^2.10.1",
+    "bootstrap": "^5.1.1",
+    "@fortawesome/react-fontawesome": "^0.1.15"
   },
   "scripts": {
     "start": "react-scripts start",
