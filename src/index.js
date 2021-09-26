@@ -7,13 +7,11 @@ import {Provider, useSelector} from 'react-redux';
 import * as serviceWorker from './serviceWorker';
 
 import * as Tone from 'tone'
-import music from "./music2.mp3";
+//import music from "./music2.mp3";
+import music from "./bensound-happyrock.mp3"
 import {
   build,
-  playActiveToneBySoft,
-  secToActivePosition,
-  setSeq,
-  shiftActivePosition, setIsPlay, setClickedPosition
+  shiftActivePosition, setIsPlay,
 } from "./features/counter/counterSlice";
 
 //Tone.js------------------------------
@@ -21,49 +19,74 @@ let musicLength=0
 let tempo,note4n,note1m,note2m
 
 let slicedBuffers=[]
+let slicedBuffers4=[]
+let slicedBuffers8=[]
 
+//However,all physicians should be equipped with an understanding of
+// how to discuss migration history,
+//record this information if it is safe to do so,
+//and recognize what effect it should have on the medical care offered.
+
+//Todo 4loop,8loop用のBufferArrayも作成すること
 export let setSlicedBuffers=(
-buf,
-expandBefore = store.getState().counter.expandBefore,
-expandAfter = store.getState().counter.expandAfter,
-wait = store.getState().counter.wait,
-bpm = store.getState().counter.bpm,
+  buf,
+  expandBefore = store.getState().counter.expandBefore,
+  expandAfter = store.getState().counter.expandAfter,
+  wait = store.getState().counter.wait,
+  bpm = store.getState().counter.bpm,
   )=>{
   console.log('start',performance.now())
   let length = buf.duration
+  console.log('buf',length)
 
   let step = 60/bpm
 
   let buffers=[]
+  let buffers4=[]
+  let buffers8=[]
 
   let sp=0+wait
   let ep=step+wait
 
   let bufIdx=0
 
-  while(ep<musicLength){
+  while(ep<musicLength+step){
     let spEx = sp-expandBefore
     let epEx = ep+expandAfter
+    let ep4Ex= ep+3*step+expandAfter
+    let ep8Ex= ep+7*step+expandAfter
     spEx = (spEx<0) ? 0 : (spEx>length) ? length :spEx
     epEx = (epEx<0) ? 0 : (epEx>length) ? length :epEx
+    ep4Ex = (ep4Ex<0) ? 0 : (ep4Ex>length) ? length :ep4Ex
+    ep8Ex = (ep8Ex<0) ? 0 : (ep8Ex>length) ? length :ep8Ex
+    if(spEx>=epEx) spEx =sp
 
     buffers[bufIdx]=      buf.slice(spEx,epEx)
+    if(bufIdx%8==0) buffers8[bufIdx] = buf.slice(spEx,ep8Ex)
+    if(bufIdx%4==0) buffers4[bufIdx] = buf.slice(spEx,ep4Ex)
     sp+=step
     ep+=step
     bufIdx+=1
   }
 
   slicedBuffers=buffers
+  slicedBuffers8=buffers8
+  slicedBuffers4=buffers4
+
   console.log('end',performance.now())
 }
 
+export let originalBuffer
 let musicOnLoad=()=>{
   musicLength = newPlayer.buffer.duration
   tempo=130
   note4n = 60/tempo
   note1m = 4*60/tempo
   note2m = 2*4*60/tempo
+
   setSlicedBuffers(newPlayer.buffer)
+
+  originalBuffer = newPlayer.buffer.slice(0,musicLength)
 
   store.dispatch(build(musicLength))
 }
@@ -79,34 +102,13 @@ newPlayer.volume.value=-18
 
 const soloB = new Tone.Solo();
 
-export const newPlayer2 = new Tone.Player(music,()=>musicOnLoad()).connect(soloB).toDestination();
-newPlayer2.loop = false;
-newPlayer2.autostart = false;
-newPlayer2.isPlay=false
-newPlayer2.volume.value=-18
-
-const soloC =new Tone.Solo().toDestination()
-
-const soloD = new Tone.Solo().toDestination() //debug
 
 //主音源再生用のオブジェクト
-/*
-export const player = new Tone.Player(music,()=>musicOnLoad()).toDestination();
-
-player.loop = true;
-player.autostart = false;
-player.isPlay=false
-player.volume.value=-18
-
- */
 
 let seq =new Tone.Sequence((time, note) => {
   synth.triggerAttackRelease(note, 0.1, time);
   // subdivisions are given as subarrays
 }, [0]);
-
-
-
 
 export let synthScore=[]
 let tickReso = 32
@@ -137,20 +139,76 @@ let reloadState=()=>{
 }
 store.subscribe(reloadState)
 
-export const testRun = (startStep,endStep)=>{
+
+export const testRun = (startStep,endStep,toEnd=false)=>{
   //startStep<0 then play from activePosition
   //endStep<0 then stop at musicLength
   //bpm = [beat/minutes] 1beat = 60/bpm sec
-  if(endStep==startStep) return null
-  soloC.solo=true
+  let bpm = Tone.Transport.bpm.value
+  console.log(bpm)
 
-  //debug
-  if((endStep-startStep)==1){
-    newPlayer.buffer=slicedBuffers[startStep]
-    newPlayer.start(0)
-    return null
-    //slicedBuffers[startStep].connect(soloD).toDestination()
+  if(endStep==startStep) return null
+
+
+  //play sliced buffer
+  let argBuffer
+  let bufferArrayLength
+  let playable=false
+  let startTime
+  let stopTime=null
+  if(toEnd==false) {
+    //section Play
+    if ((endStep - startStep) == 1) {
+      argBuffer = slicedBuffers
+    } else if ((endStep - startStep) == 4) {
+      argBuffer = slicedBuffers4
+    } else if ((endStep - startStep) == 8) {
+      argBuffer = slicedBuffers8
+    }
+    if(argBuffer.length > startStep){
+      playable=true
+      newPlayer.buffer = argBuffer[startStep]
+      //startTime=0
+    }
+  }else {
+    //not sectioned play
+    playable=true
+    let startSec = startStep *60/bpm
+    startSec = (startSec<0) ? 0 : (startSec>originalBuffer.duration)? originalBuffer.duration : startSec
+    newPlayer.buffer = originalBuffer.slice(startSec,originalBuffer.duration)
   }
+
+  if (playable) {
+    newPlayer.loop = true
+    newPlayer.start(0)
+  } else {
+    newPlayer.stop(0)
+  }
+
+
+  //Not section play such as start from here to end
+  //play soft synth and progress seek bar
+  let nowStep = startStep
+  Tone.Transport.cancel()
+  Tone.Transport.scheduleRepeat((time) => {
+    //更新処理プログレスバーの更新処理
+    console.log('tick')
+    store.dispatch(shiftActivePosition(nowStep))
+    if (isPlaySynth) {
+      //Play soft Synth
+      synth.triggerAttackRelease(score[nowStep], 0.3, time);
+    }
+
+    //次のステップをセット
+    nowStep=(nowStep+1<endStep)?nowStep+1 : startStep
+
+  }, "4n", 0)
+  Tone.Transport.bpm.value=bpm
+  Tone.Transport.start()
+  console.log('runed')
+  return null
+
+
 
   //definitions
   let tickParStep = tickReso / 4 //[tick/step]
@@ -176,12 +234,12 @@ export const testRun = (startStep,endStep)=>{
   let absInitTick = secToTick(startSec)
   let isDispatched = true
   let activeObject=newPlayer
-  let inactiveObject=newPlayer2
+  let inactiveObject=newPlayer//2
   let activeSolo =soloA
   let inactiveSolo = soloB
   let flipBool = false
   let isLoopDispatched=false
-
+/*
   //CallBack
   Tone.Transport.scheduleRepeat((time) => {
 
@@ -199,14 +257,16 @@ export const testRun = (startStep,endStep)=>{
         if(isDispatched) {
           flipBool = !flipBool
         }
-        if(flipBool){
+        if(flipBool || true){
           newPlayer.start(0, startSec, musicLength)
           soloB.solo=false
           soloA.solo=true
         }else{
+
           newPlayer2.start(0, startSec, musicLength)
           soloA.solo=false
           soloB.solo=true
+
         }
 
       }
@@ -235,8 +295,10 @@ export const testRun = (startStep,endStep)=>{
     if(tick>=endTick){
       console.log(tick,endTick)
       console.log('end')
+
       newPlayer.stop()
       newPlayer2.stop()
+
       tick=0
       step=startStep
       if(!isLoop) Tone.Transport.stop()
@@ -245,17 +307,20 @@ export const testRun = (startStep,endStep)=>{
 
     }
 
+
+
+
   }, tickReso+"n", 0)
   Tone.Transport.bpm.value=bpm
   Tone.Transport.start()
+
+   */
 }
 
 
 export const resumeTest=()=>{
   console.log('seconds',Tone.Transport.seconds)
   if(newPlayer.state=="stopped"){
-
-
     Tone.Transport.start()
     newPlayer.start()
   }else {

@@ -319,6 +319,7 @@ const PopContent =()=> {
                               defaultValue={0}
                               type="number"
                               step='0.1'
+                              min={0}
                               onChange={(e) => dispatch(changeExpandBefore(e.target.value))}
                             />
                           </Col>
@@ -342,6 +343,7 @@ const PopContent =()=> {
                               defaultValue={0}
                               type="number"
                               step='0.1'
+                              min={0}
                               onChange={(e) => dispatch(changeExpandAfter(e.target.value))}
                             />
                           </Col>
@@ -392,7 +394,8 @@ export function Footer() {
   const isPlay = useSelector((state) => state.counter.isPlay)
 
   const [incrementAmount,setIncrementAmount,keyPosition,setKeyPosition] = useState(0);
-
+  let playStopLabel = (isPlay) ? faPause : faPlay
+  let globalPlayStopLabel =(isPlay)? faPauseCircle:faPlayCircle
 
   return(
 
@@ -432,6 +435,7 @@ export function Footer() {
                   className={"btn btn-outline-dark p-1"}
                   onClick={()=>dispatch(switchPlayBySeek())}
                 >
+                  //TODO change icon to |<
                   <FontAwesomeIcon
                     icon={playStopLabel}
                     color={"#179317"}

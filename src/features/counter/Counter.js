@@ -4,63 +4,33 @@ import { useEffect } from "react";
 import {timeColoned, toNoteString} from '../../index'
 import * as Tone from 'tone'
 import 'bootstrap/dist/css/bootstrap.min.css';
-import Popover from "react-bootstrap/Popover"
-
-import OverlayTrigger from 'react-bootstrap/OverlayTrigger';
 
 import {
-  changeBpm, changeWait,
   selectCount,
   playThis, counterSlice,
   shiftActivePosition,
   shiftQuarterNote,
   playToneBySoft,
   switchPlay,
-  switchLoop,
-  switchPlaySynth,
-  fileInput,
-  playBySeek, clickedPosition,
-  switchPlayBySeek, moveSeek, changeExpandAfter, changeExpandBefore, changeSpeed, changeVolume, setClickedPosition,
+  fileInput, setClickedPosition,
 } from './counterSlice';
 import styles from './Counter.module.css';
 import {Container, Row, Col, Button,Overlay} from "react-bootstrap";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import { faPause, faPauseCircle, faPlay, faPlayCircle, faStop,faCoffee} from "@fortawesome/free-solid-svg-icons";
-import {faFileAudio} from "@fortawesome/free-regular-svg-icons";
-import {faCogs} from "@fortawesome/free-solid-svg-icons/faCogs";
-import {faVolumeUp} from "@fortawesome/free-solid-svg-icons/faVolumeUp";
 import {faPowerOff} from "@fortawesome/free-solid-svg-icons/faPowerOff";
 import {faClock} from "@fortawesome/free-regular-svg-icons/faClock";
-
-let fontObject =(min,nom,max)=> {
-  let result
-  result = {
-    "font-size":"clamp("+
-      min+"rem"
-      +","+
-      nom+"vw"
-      +","+
-      max+"rem"
-      +")"
-  }
-  return result
-}
-
 
 //export let player
 export function Counter() {
 
   const rowLength=8
-  const loaded =useSelector((state) => state.counter.loaded)
-  const count = useSelector(selectCount);
-  const expand = useSelector((state) => state.counter.expand)
   const numberOf4n = useSelector((state) => state.counter.numberOf4n)
   const activePosition = useSelector((state) => state.counter.activePosition)
   const clickedPosition = useSelector((state) => state.counter.clickedPosition)
   const quarterNotes = useSelector((state) => state.counter.quarterNotes)
   const dispatch = useDispatch();
   const audioLength = useSelector((state) => state.counter.musicLength)
-  const positionSec = useSelector((state) => state.counter.positionSec)
   const isPlay = useSelector((state) => state.counter.isPlay)
 
   const [incrementAmount,setIncrementAmount,keyPosition,setKeyPosition] = useState(0);
@@ -220,8 +190,6 @@ export function Counter() {
   const uploadFile = React.createRef();
   //const file = uploadFile.current.files[0];
 
-  let playStopLabel = (isPlay) ? faPause : faPlay
-  let globalPlayStopLabel =(isPlay)? faPauseCircle:faPlayCircle
 
 
 

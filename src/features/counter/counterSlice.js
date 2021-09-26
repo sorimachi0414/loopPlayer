@@ -7,7 +7,7 @@ import {
   playWithProgress,
   setSoftSynthSequence,
   testRun,
-  resumeTest, setSlicedBuffers,
+  resumeTest, setSlicedBuffers, originalBuffer,
 } from '../../index'
 import * as Tone from 'tone'
 
@@ -19,7 +19,7 @@ const initialState = {
   isPlaySynth:false,
   loaded:0,
   value: 0,
-  bpm:113,
+  bpm:90,
   wait:0,
   expandBefore:0,
   expandAfter:0,
@@ -57,14 +57,14 @@ export const counterSlice = createSlice({
       state.isPlay=action.payload
     },
     playThis:(state,action)=>{
-
-      let startStep = action.payload.a
-      let endStep = action.payload.b
-      state.activePosition=startStep
-      state.clickedPosition = startStep
-      testRun(startStep,endStep)
-      state.lastStartPoint=startStep
-      state.lastEndPoint=endStep
+        state.isPlay=true
+        let startStep = action.payload.a
+        let endStep = action.payload.b
+        state.activePosition = startStep
+        state.clickedPosition = startStep
+        testRun(startStep, endStep)
+        state.lastStartPoint = startStep
+        state.lastEndPoint = endStep
       /*
       //Todo: ボタンでプログレスバーを表現する？
       let a = action.payload.a
@@ -140,7 +140,9 @@ export const counterSlice = createSlice({
       //複雑化を避け、クリックしたら即再生
       //state.activePosition=startStep
       if (newPlayer.state=='stopped') {
-        testRun(-1,-1)
+        //testRun(-1,-1)
+        console.log('runSwitchBySeek')
+        testRun(0,state.numberOf4n,true)
         state.isPlay=true //slicerで変えないとエラーが出る時が。
       }else{
         //resume
@@ -174,35 +176,11 @@ export const counterSlice = createSlice({
         }
         */
     },
-    switchPlay:(state)=>{
-      if (newPlayer.state=='stopped'){
-        //停止中
-        newPlayer.start()
-        newPlayer.isPlay=true
-        state.isPlay=true
-        Tone.Transport.start();
-      }else{
-        //再生中
-        newPlayer.stop()
-        newPlayer.isPlay=false
-        state.isPlay=false
-        Tone.Transport.stop()
-      }
-    },
-    build:(state,action)=>{
-      let musicLength = action.payload
-      state.musicLength = musicLength
-      let numberOf4n = Math.ceil(musicLength * state.bpm /60)
-      state.numberOf4n = numberOf4n
-      state.loaded=1
-      for(let i=0;i<numberOf4n;i++){
-        state.quarterNotes.push(36)
-      }
-    },
     moveSeek:(state,action)=>{
       state.activePosition = action.payload
       state.clickedPosition = action.payload
-      testRun(action.payload,-1)
+      testRun(action.payload,state.numberOf4n,true)
+      state.isPlay=true
 
       /*
       let sec = state.musicLength * action.payload / state.numberOf4n
@@ -218,14 +196,37 @@ export const counterSlice = createSlice({
         Tone.Transport.start();
       }*/
     },
-
+    switchPlay:(state)=>{
+      if (newPlayer.state=='stopped'){
+        //停止中
+        newPlayer.start()
+        state.isPlay=true
+        Tone.Transport.start(); //for progress bar
+      }else{
+        //再生中
+        newPlayer.stop()
+        state.isPlay=false
+        Tone.Transport.pause()
+      }
+    },
+    build:(state,action)=>{
+      let musicLength = action.payload
+      state.musicLength = musicLength
+      let numberOf4n = Math.ceil(musicLength * state.bpm /60)
+      state.numberOf4n = numberOf4n
+      state.loaded=1
+      for(let i=0;i<numberOf4n;i++){
+        state.quarterNotes.push(36)
+      }
+      Tone.Transport.bpm.value=state.bpm
+    },
     changeBpm:(state,action)=>{
       let bpm = Number(action.payload)
       bpm = (bpm<1) ? 1 : bpm
       bpm = (bpm>999) ? 999 : bpm
       state.bpm=bpm
       setSlicedBuffers(
-        newPlayer.buffer,
+        originalBuffer,
         state.expandBefore,
         state.expandAfter,
         state.wait,
@@ -237,13 +238,22 @@ export const counterSlice = createSlice({
     changeWait:(state,action)=>{
       state.wait=Number(action.payload)
       setSlicedBuffers(
-        newPlayer.buffer,
+        originalBuffer,
         state.expandBefore,
         state.expandAfter,
         Number(action.payload),
         state.bpm,
       )
       testRun(state.lastStartPoint,state.lastEndPoint)
+
+      //reBuild
+      let musicLength = state.musicLength-Number(action.payload)
+      let numberOf4n = Math.ceil(musicLength * state.bpm /60)
+      state.numberOf4n = numberOf4n
+      state.loaded=1
+      for(let i=0;i<numberOf4n;i++){
+        state.quarterNotes.push(36)
+      }
     },
     changeVolume:(state,action)=>{
       let vol = Number(action.payload)
@@ -256,7 +266,7 @@ export const counterSlice = createSlice({
     changeExpandBefore:(state,action)=>{
       state.expandBefore=Number(action.payload)
       setSlicedBuffers(
-        newPlayer.buffer,
+        originalBuffer,
         Number(action.payload),
         state.expandAfter,
         state.wait,
@@ -268,7 +278,7 @@ export const counterSlice = createSlice({
     changeExpandAfter:(state,action)=>{
       state.expandAfter=Number(action.payload)
       setSlicedBuffers(
-        newPlayer.buffer,
+        originalBuffer,
         state.expandBefore,
         Number(action.payload),
         state.wait,
