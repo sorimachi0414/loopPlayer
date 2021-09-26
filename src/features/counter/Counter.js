@@ -2,22 +2,13 @@ import React, {useRef, useState} from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { useEffect } from "react";
 import {timeColoned, toNoteString} from '../../index'
-import * as Tone from 'tone'
 import 'bootstrap/dist/css/bootstrap.min.css';
 
 import {
-  selectCount,
-  playThis, counterSlice,
-  shiftActivePosition,
-  shiftQuarterNote,
-  playToneBySoft,
-  switchPlay,
-  fileInput, setClickedPosition,
+  playThis,shiftActivePosition,shiftQuarterNote, playToneBySoft, switchPlay, fileInput, setClickedPosition,
 } from './counterSlice';
-import styles from './Counter.module.css';
 import {Container, Row, Col, Button,Overlay} from "react-bootstrap";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
-import { faPause, faPauseCircle, faPlay, faPlayCircle, faStop,faCoffee} from "@fortawesome/free-solid-svg-icons";
 import {faPowerOff} from "@fortawesome/free-solid-svg-icons/faPowerOff";
 import {faClock} from "@fortawesome/free-regular-svg-icons/faClock";
 
@@ -31,12 +22,7 @@ export function Counter() {
   const quarterNotes = useSelector((state) => state.counter.quarterNotes)
   const dispatch = useDispatch();
   const audioLength = useSelector((state) => state.counter.musicLength)
-  const isPlay = useSelector((state) => state.counter.isPlay)
-
   const [incrementAmount,setIncrementAmount,keyPosition,setKeyPosition] = useState(0);
-
-  const incrementValue = Number(incrementAmount) || 0;
-  let keyPositionValue = Number(keyPosition) || 0;
 
   let button4n=[]
   for(let i=0;i<numberOf4n;i++){

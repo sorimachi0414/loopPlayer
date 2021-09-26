@@ -6,7 +6,7 @@ import {
   changeExpandBefore,
   changeSpeed,
   changeVolume,
-  changeWait, moveSeek, selectCount,
+  changeWait, moveSeek,
   switchLoop, switchPlay, switchPlayBySeek,
   switchPlaySynth
 } from "../counter/counterSlice";
@@ -381,19 +381,12 @@ const PopContent =()=> {
 
 export function Footer() {
   const dispatch = useDispatch();
-  const rowLength=8
-  const loaded =useSelector((state) => state.counter.loaded)
-  const count = useSelector(selectCount);
-  const expand = useSelector((state) => state.counter.expand)
   const numberOf4n = useSelector((state) => state.counter.numberOf4n)
   const activePosition = useSelector((state) => state.counter.activePosition)
-  const clickedPosition = useSelector((state) => state.counter.clickedPosition)
-  const quarterNotes = useSelector((state) => state.counter.quarterNotes)
   const audioLength = useSelector((state) => state.counter.musicLength)
-  const positionSec = useSelector((state) => state.counter.positionSec)
   const isPlay = useSelector((state) => state.counter.isPlay)
 
-  const [incrementAmount,setIncrementAmount,keyPosition,setKeyPosition] = useState(0);
+  //const [incrementAmount,setIncrementAmount,keyPosition,setKeyPosition] = useState(0);
   let playStopLabel = (isPlay) ? faPause : faStepBackward
   let globalPlayStopLabel =(isPlay)? faPauseCircle:faPlayCircle
 
