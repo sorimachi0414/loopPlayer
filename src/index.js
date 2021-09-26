@@ -140,24 +140,17 @@ let reloadState=()=>{
 store.subscribe(reloadState)
 
 
-export const testRun = (startStep,endStep,toEnd=false)=>{
+export const testRun = (startStep,endStep,isLoop=true,toEnd=false)=>{
   //startStep<0 then play from activePosition
-  //endStep<0 then stop at musicLength
-  //bpm = [beat/minutes] 1beat = 60/bpm sec
   let bpm = Tone.Transport.bpm.value
-  console.log(bpm)
-
   if(endStep==startStep) return null
-
 
   //play sliced buffer
   let argBuffer
-  let bufferArrayLength
   let playable=false
-  let startTime
-  let stopTime=null
   if(toEnd==false) {
     //section Play
+    //select sectioned buffer
     if ((endStep - startStep) == 1) {
       argBuffer = slicedBuffers
     } else if ((endStep - startStep) == 4) {
@@ -165,10 +158,10 @@ export const testRun = (startStep,endStep,toEnd=false)=>{
     } else if ((endStep - startStep) == 8) {
       argBuffer = slicedBuffers8
     }
+    //set buffer to master
     if(argBuffer.length > startStep){
       playable=true
       newPlayer.buffer = argBuffer[startStep]
-      //startTime=0
     }
   }else {
     //not sectioned play
@@ -178,38 +171,34 @@ export const testRun = (startStep,endStep,toEnd=false)=>{
     newPlayer.buffer = originalBuffer.slice(startSec,originalBuffer.duration)
   }
 
+  //player Play
   if (playable) {
-    newPlayer.loop = true
     newPlayer.start(0)
+    newPlayer.loop = isLoop
   } else {
     newPlayer.stop(0)
   }
-
+  console.log(seq)
 
   //Not section play such as start from here to end
   //play soft synth and progress seek bar
   let nowStep = startStep
   Tone.Transport.cancel()
+  Tone.Transport.start()
   Tone.Transport.scheduleRepeat((time) => {
     //更新処理プログレスバーの更新処理
-    console.log('tick')
+    if (isPlaySynth) synth.triggerAttackRelease(score[nowStep], 0.3, time);
     store.dispatch(shiftActivePosition(nowStep))
-    if (isPlaySynth) {
-      //Play soft Synth
-      synth.triggerAttackRelease(score[nowStep], 0.3, time);
-    }
-
     //次のステップをセット
-    nowStep=(nowStep+1<endStep)?nowStep+1 : startStep
-
+    nowStep = (nowStep+1<endStep) ?nowStep+1 : startStep;
+    if(!isLoop) Tone.Transport.cancel(0)
   }, "4n", 0)
   Tone.Transport.bpm.value=bpm
-  Tone.Transport.start()
-  console.log('runed')
+
   return null
 
 
-
+  /*
   //definitions
   let tickParStep = tickReso / 4 //[tick/step]
   let secToTick=(sec)=> (sec/(60/bpm))*tickParStep
@@ -239,7 +228,7 @@ export const testRun = (startStep,endStep,toEnd=false)=>{
   let inactiveSolo = soloB
   let flipBool = false
   let isLoopDispatched=false
-/*
+
   //CallBack
   Tone.Transport.scheduleRepeat((time) => {
 
@@ -319,7 +308,6 @@ export const testRun = (startStep,endStep,toEnd=false)=>{
 
 
 export const resumeTest=()=>{
-  console.log('seconds',Tone.Transport.seconds)
   if(newPlayer.state=="stopped"){
     Tone.Transport.start()
     newPlayer.start()
@@ -328,8 +316,6 @@ export const resumeTest=()=>{
     newPlayer.stop()
   }
 }
-
-
 
 
 export const setSoftSynthSequence=(notes)=>{

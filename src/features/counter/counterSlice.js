@@ -62,7 +62,7 @@ export const counterSlice = createSlice({
         let endStep = action.payload.b
         state.activePosition = startStep
         state.clickedPosition = startStep
-        testRun(startStep, endStep)
+        testRun(startStep, endStep,state.isLoop)
         state.lastStartPoint = startStep
         state.lastEndPoint = endStep
       /*
@@ -142,7 +142,7 @@ export const counterSlice = createSlice({
       if (newPlayer.state=='stopped') {
         //testRun(-1,-1)
         console.log('runSwitchBySeek')
-        testRun(0,state.numberOf4n,true)
+        testRun(0,state.numberOf4n,state.isLoop,true)
         state.isPlay=true //slicerで変えないとエラーが出る時が。
       }else{
         //resume
@@ -179,7 +179,7 @@ export const counterSlice = createSlice({
     moveSeek:(state,action)=>{
       state.activePosition = action.payload
       state.clickedPosition = action.payload
-      testRun(action.payload,state.numberOf4n,true)
+      testRun(action.payload,state.numberOf4n,state.isLoop,true)
       state.isPlay=true
 
       /*
@@ -244,7 +244,7 @@ export const counterSlice = createSlice({
         Number(action.payload),
         state.bpm,
       )
-      testRun(state.lastStartPoint,state.lastEndPoint)
+      testRun(state.lastStartPoint,state.lastEndPoint,state.isLoop)
 
       //reBuild
       let musicLength = state.musicLength-Number(action.payload)
@@ -272,7 +272,7 @@ export const counterSlice = createSlice({
         state.wait,
         state.bpm,
       )
-      testRun(state.lastStartPoint,state.lastEndPoint)
+      testRun(state.lastStartPoint,state.lastEndPoint,state.isLoop)
 
     },
     changeExpandAfter:(state,action)=>{
@@ -284,7 +284,7 @@ export const counterSlice = createSlice({
         state.wait,
         state.bpm,
       )
-      testRun(state.lastStartPoint,state.lastEndPoint)
+      testRun(state.lastStartPoint,state.lastEndPoint,state.isLoop)
 
     },
     secToActivePosition:(state,action)=>{

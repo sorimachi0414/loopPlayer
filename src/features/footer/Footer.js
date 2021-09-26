@@ -1,4 +1,4 @@
-import {faPause, faPauseCircle, faPlay, faPlayCircle} from "@fortawesome/free-solid-svg-icons";
+import {faPause, faPauseCircle, faPlay, faPlayCircle, faStepBackward} from "@fortawesome/free-solid-svg-icons";
 import {useDispatch, useSelector} from "react-redux";
 import {Col, Container, Overlay, Row} from "react-bootstrap";
 import {
@@ -394,7 +394,7 @@ export function Footer() {
   const isPlay = useSelector((state) => state.counter.isPlay)
 
   const [incrementAmount,setIncrementAmount,keyPosition,setKeyPosition] = useState(0);
-  let playStopLabel = (isPlay) ? faPause : faPlay
+  let playStopLabel = (isPlay) ? faPause : faStepBackward
   let globalPlayStopLabel =(isPlay)? faPauseCircle:faPlayCircle
 
   return(
@@ -435,20 +435,12 @@ export function Footer() {
                   className={"btn btn-outline-dark p-1"}
                   onClick={()=>dispatch(switchPlayBySeek())}
                 >
-                  //TODO change icon to |<
                   <FontAwesomeIcon
                     icon={playStopLabel}
                     color={"#179317"}
                     size={"2x"}
                     style={fontObject(1,3,2)}
                     className={"my-0 py-0 mx-1"}
-                  />
-                  <FontAwesomeIcon
-                    icon={faFileAudio}
-                    size={"2x"}
-                    style={fontObject(1,3,2)}
-
-                    color={"#179317"}
                   />
                 </button>
                 <span
