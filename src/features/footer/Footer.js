@@ -15,7 +15,6 @@ import {faVolumeUp} from "@fortawesome/free-solid-svg-icons/faVolumeUp";
 import * as Tone from "tone";
 import React, {useRef, useState} from "react";
 import {faCogs} from "@fortawesome/free-solid-svg-icons/faCogs";
-import {faFileAudio} from "@fortawesome/free-regular-svg-icons";
 import {timeColoned} from "../../index";
 
 let lastClick=0

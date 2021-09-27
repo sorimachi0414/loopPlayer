@@ -11,6 +11,9 @@ import {Container, Row, Col, Button,Overlay} from "react-bootstrap";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faPowerOff} from "@fortawesome/free-solid-svg-icons/faPowerOff";
 import {faClock} from "@fortawesome/free-regular-svg-icons/faClock";
+import {faCaretSquareUp} from "@fortawesome/free-regular-svg-icons/faCaretSquareUp"
+import {faCaretSquareDown, faCaretSquareLeft, faKeyboard} from "@fortawesome/free-regular-svg-icons";
+import {faCaretSquareRight} from "@fortawesome/free-regular-svg-icons";
 
 //export let player
 export function Counter() {
@@ -23,41 +26,42 @@ export function Counter() {
   const dispatch = useDispatch();
   const audioLength = useSelector((state) => state.counter.musicLength)
   const [incrementAmount,setIncrementAmount,keyPosition,setKeyPosition] = useState(0);
+  const isPlaySynth = useSelector((state) => state.counter.isPlaySynth)
+
+  let eachSynthNode = (isPlaySynth)?"my-1":"my-1 collapse"
 
   let button4n=[]
   for(let i=0;i<numberOf4n;i++){
     //Block Loop
     if (i%(rowLength)==0){
      button4n.push(
-       <Col className={"p-1 offset-1 offset-sm-1"} xs={2} sm={1}>
-         <Row>
-           <Col>
-             <button
-               className={"btn btn btn-outline-dark w-75 my-1"}
-               onClick={()=>dispatch(
-                 playThis({a:i,b:i+rowLength})
-                   )
-               }
-             >↺ 8</button>
-           </Col>
-           <Col>
-             <button
-               className={"btn btn btn-outline-dark w-75 my-1"}
-               onClick={()=>dispatch(playThis({a:i,b:i+rowLength/2}))}
-             >↺ 4</button>
-           </Col>
-         </Row>
+       <>
+       <Col className={"p-1 offset-sm-1"} xs={2} sm={1}>
+         <button
+           className={"btn btn btn-outline-dark w-75 my-1 px-1"}
+           onClick={()=>dispatch(
+             playThis({a:i,b:i+rowLength})
+           )
+           }
+         >↺8</button>
        </Col>
+       <Col className={"p-1"} xs={2} sm={1}>
+         <button
+           className={"btn btn btn-outline-dark w-75 my-1 px-1"}
+           onClick={()=>dispatch(playThis({a:i,b:i+rowLength/2}))}
+         >↺4</button>
+       </Col>
+       </>
      )
     }
     //Block loop
     if(i%(rowLength)!==0 && i%(rowLength/2)==0){
       button4n.push(
-        <Col className={"p-1 offset-1 offset-sm-0"} xs={2} sm={1}>
+        <Col className={"p-1 offset-2 offset-sm-0"} xs={2} sm={1}>
           <button
-            className={"btn btn-outline-dark w-75"}
+            className={"btn btn-outline-dark w-75 px-1"}
             onClick={()=>dispatch(playThis({a:i,b:i+rowLength/2}))}
-          >↺ 4</button>
+          >↺4</button>
         </Col>
       )
     }
@@ -75,7 +79,7 @@ export function Counter() {
               onClick={()=>dispatch(playThis({a:i,b:i+1}))}
             ><span style={{"font-size":1.5+"em"}}>{i+1}</span></button>
           </Col>
-          <Col id="eachNode" className={"my-1"} xs={12}>
+          <Col id="eachNode" className={eachSynthNode} xs={12}>
             <button
               className={"btn btn-outline-secondary w-75 py-0 rounded-0"}
               onClick={()=>dispatch(shiftQuarterNote({position:i,shift:1}))}
@@ -205,6 +209,27 @@ export function Counter() {
                   onChange={()=>dispatch(fileInput(uploadFile))}
                 />
               </Col>
+              <Col xs={12}　style={{"letterSpacing":"0.02rem"}}>
+                You can use Arrow Keys
+                <FontAwesomeIcon
+                  icon={faCaretSquareLeft}
+                  style={{"margin-left":"0.3rem"}}
+                />
+                <FontAwesomeIcon
+                  icon={faCaretSquareUp}
+                  style={{"margin-left":"0.3rem"}}
+                />
+                <FontAwesomeIcon
+                  icon={faCaretSquareDown}
+                  style={{"margin-left":"0.3rem"}}
+
+                />
+                <FontAwesomeIcon
+                  icon={faCaretSquareRight}
+                  style={{"margin-left":"0.3rem"}}
+
+                />
+              </Col>
             </Row>
           </Col>
 
@@ -220,7 +245,6 @@ export function Counter() {
         <Col></Col>
       </Row>
     </Container>
-      //Container
     </div>
     );
 }
