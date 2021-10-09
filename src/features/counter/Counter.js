@@ -140,7 +140,7 @@ export function Counter() {
   });
 
   const handleKeyDown = (event) => {
-    console.debug("Key event", event);
+    //console.debug("Key event", event);
     if (event.code=='Space') {
       //dispatch(playThis({a:activePosition,b:activePosition+1}))
       dispatch(switchPlay())

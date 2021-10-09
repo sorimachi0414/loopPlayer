@@ -3,14 +3,14 @@ import ReactDOM from 'react-dom';
 import './index.css';
 import App from './App';
 import { store } from './app/store';
-import {Provider, useSelector} from 'react-redux';
+import {Provider} from 'react-redux';
 import * as serviceWorker from './serviceWorker';
 import * as Tone from 'tone'
 import music from "./bensound-happyrock.mp3"
-import {build,shiftActivePosition, setIsPlay,} from "./features/counter/counterSlice";
+import {build,shiftActivePosition,} from "./features/counter/counterSlice";
 // ///////////////////////////////////
 // Explain a method of play music
-// when onloaded cut whole audio buffer to "4n" length of buffers
+// when onLoaded cut whole audio buffer to "4n" length of buffers
 // when push a button, tiny length of buffer is played
 // after buffer has played, soft synth is also play by scheduleRepeat callback
 // ///////////////////////////////////
@@ -52,8 +52,8 @@ export let setSlicedBuffers=(
     if(spEx>=epEx) spEx =sp
 
     buffers[bufIdx]=      buf.slice(spEx,epEx)
-    if(bufIdx%8==0) buffers8[bufIdx] = buf.slice(spEx,ep8Ex)
-    if(bufIdx%4==0) buffers4[bufIdx] = buf.slice(spEx,ep4Ex)
+    if(bufIdx%8===0) buffers8[bufIdx] = buf.slice(spEx,ep8Ex)
+    if(bufIdx%4===0) buffers4[bufIdx] = buf.slice(spEx,ep4Ex)
     sp+=step
     ep+=step
     bufIdx+=1
@@ -102,17 +102,17 @@ store.subscribe(reloadState)
 newPlayer.loop=false
 
 //let loop = new Tone.Loop(()=>{},60/90)
-let subCallBack=()=>{;}
+let subCallBack=()=>{}
 
 let loop = new Tone.Loop((time)=>{
   newPlayer.start(time)
   subCallBack(time)
-}, "2").start()
+}, "2")//.start()
 
 
-export const playMusic = (startStep, endStep, isLoop=true, toEnd=false)=>{
+export const playMusic = (startStep, endStep)=>{
   //This block is a key of sound delay. You should reduce the delay. Below is one of the solutions.
-  if(endStep==startStep) return "Abnormal called"
+  if(endStep===startStep) return "Abnormal called"
 
   let nowStep = startStep
   //0.005 object 0.05 now =>0.005 without constructor
@@ -133,7 +133,7 @@ export const playMusic = (startStep, endStep, isLoop=true, toEnd=false)=>{
 }
 
 export const resumeTest=()=>{
-  if(newPlayer.state=="stopped"){
+  if(newPlayer.state==="stopped"){
     Tone.Transport.start()
     newPlayer.start() //is this needed?
   }else {

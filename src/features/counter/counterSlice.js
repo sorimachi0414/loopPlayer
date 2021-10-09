@@ -52,7 +52,7 @@ export const counterSlice = createSlice({
         let endStep = action.payload.b
         state.activePosition = startStep
         state.clickedPosition = startStep
-        playMusic(startStep, endStep,state.isLoop)
+        playMusic(startStep, endStep)
         state.lastStartPoint = startStep
         state.lastEndPoint = endStep
     },
@@ -88,7 +88,7 @@ export const counterSlice = createSlice({
     },
     switchPlayBySeek:(state,action)=>{
       if (newPlayer.state=='stopped') {
-        playMusic(0,state.numberOf4n,state.isLoop,true)
+        playMusic(0,state.numberOf4n)
         state.isPlay=true //slicerで変えないとエラーが出る時が。
       }else{
         resumeTest()
@@ -98,13 +98,13 @@ export const counterSlice = createSlice({
     moveSeek:(state,action)=>{
       state.activePosition = action.payload
       state.clickedPosition = action.payload
-      playMusic(action.payload,state.numberOf4n,state.isLoop,true)
+      playMusic(action.payload,state.numberOf4n)
       state.isPlay=true
     },
     switchPlay:(state)=>{
       if (newPlayer.state=='stopped'){
         //停止中
-        playMusic(state.activePosition,state.numberOf4n,state.isLoop,true)
+        playMusic(state.activePosition,state.numberOf4n)
         state.isPlay=true //slicerで変えないとエラーが出る時が。
       }else{
         //再生中
@@ -147,7 +147,7 @@ export const counterSlice = createSlice({
         Number(action.payload),
         state.bpm,
       )
-      playMusic(state.lastStartPoint,state.lastEndPoint,state.isLoop)
+      playMusic(state.lastStartPoint,state.lastEndPoint)
 
       //reBuild
       let musicLength = state.musicLength-Number(action.payload)
@@ -175,7 +175,7 @@ export const counterSlice = createSlice({
         state.wait,
         state.bpm,
       )
-      playMusic(state.lastStartPoint,state.lastEndPoint,state.isLoop)
+      playMusic(state.lastStartPoint,state.lastEndPoint)
 
     },
     changeExpandAfter:(state,action)=>{
@@ -187,7 +187,7 @@ export const counterSlice = createSlice({
         state.wait,
         state.bpm,
       )
-      playMusic(state.lastStartPoint,state.lastEndPoint,state.isLoop)
+      playMusic(state.lastStartPoint,state.lastEndPoint)
 
     },
     secToActivePosition:(state,action)=>{
