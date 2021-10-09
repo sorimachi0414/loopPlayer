@@ -83,6 +83,7 @@ newPlayer.loop = false;
 newPlayer.autostart = false;
 newPlayer.volume.value=-18
 
+
 export let synthScore=[]
 
 //get score from state
@@ -103,19 +104,33 @@ let reloadState=()=>{
 }
 store.subscribe(reloadState)
 
+//debug
+const debugOn = true
+
+newPlayer.loop=false
+
+//let loop = new Tone.Loop(()=>{},60/90)
+let subCallBack=()=>{;}
+
+let loop = new Tone.Loop((time)=>{
+  newPlayer.start(time)
+  subCallBack(time)
+}, "2").start()
+
 
 export const testRun = (startStep,endStep,isLoop=true,toEnd=false)=>{
   //startStep<0 then play from activePosition
+  let a =Tone.now()
 
-  //Abnormal conditions handling
-  if(endStep==startStep) return null
+  if(endStep==startStep) return "abnormal called"
 
   //Initiate
   let bpm = Tone.Transport.bpm.value
 
   //play sliced buffer
-  let argBuffer
   let playable=false
+
+  /*
   if(toEnd==false) {
     //section Play
     //select sectioned buffer
@@ -137,6 +152,47 @@ export const testRun = (startStep,endStep,isLoop=true,toEnd=false)=>{
     let startSec = startStep *60/bpm
     startSec = (startSec<0) ? 0 : (startSec>originalBuffer.duration)? originalBuffer.duration : startSec
     newPlayer.buffer = originalBuffer.slice(startSec,originalBuffer.duration)
+  }
+   */
+
+  if(debugOn){
+    let nowStep = startStep
+    if(true){
+      //0.005 object 0.05 now =>0.005 without constructor
+      //console.log(0,Tone.now()-a)
+      loop.cancel()
+      newPlayer.buffer = slicedBuffers[nowStep]
+      loop.interval=newPlayer.buffer.duration
+
+      /*
+      loop.callback=(time)=>{
+        console.log(4,Tone.now()-a)
+        newPlayer.start(time)
+        console.log(5,Tone.now()-a)
+
+        //if (isPlaySynth) synth.triggerAttackRelease(score[nowStep], 0.3, time);
+        //store.dispatch(shiftActivePosition(nowStep))
+        //次のステップをセット
+        nowStep = (nowStep+1<endStep) ?nowStep+1 : startStep;
+        newPlayer.buffer = slicedBuffers[nowStep]
+
+      }
+ */
+      loop.start()
+      console.log(4,Tone.now()-a)
+
+      subCallBack=(time)=>{
+        if (isPlaySynth) synth.triggerAttackRelease(score[nowStep], 0.3, time);
+        store.dispatch(shiftActivePosition(nowStep))
+        //次のステップをセット
+        nowStep = (nowStep+1<endStep) ?nowStep+1 : startStep;
+        newPlayer.buffer = slicedBuffers[nowStep]
+      }
+
+      Tone.Transport.start()
+      return null
+    }
+
   }
 
   //player Play
