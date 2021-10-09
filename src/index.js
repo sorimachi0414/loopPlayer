@@ -108,6 +108,8 @@ let loop = new Tone.Loop((time)=>{
   newPlayer.start(time)
   subCallBack(time)
 }, "2")//.start()
+newPlayer.context._context.resume()
+loop.context._context.resume()
 
 
 export const playMusic = (startStep, endStep)=>{
