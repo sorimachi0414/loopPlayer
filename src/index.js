@@ -110,7 +110,10 @@ let loop = new Tone.Loop((time)=>{
 }, "2")//.start()
 //Audio context error
 newPlayer.context._context.resume()
+newPlayer.context.resume()
 loop.context._context.resume()
+loop.context.resume()
+let resumed = false
 
 export const playMusic = (startStep, endStep)=>{
   //This block is a key of sound delay. You should reduce the delay. Below is one of the solutions.
@@ -121,6 +124,10 @@ export const playMusic = (startStep, endStep)=>{
   loop.cancel()
   newPlayer.buffer = slicedBuffers[nowStep]
   loop.interval=newPlayer.buffer.duration
+  if(!resumed){
+    loop.context.resume()
+    resumed=true
+  }
   loop.start()
 
   subCallBack=(time)=>{
