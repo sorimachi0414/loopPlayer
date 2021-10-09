@@ -108,9 +108,9 @@ let loop = new Tone.Loop((time)=>{
   newPlayer.start(time)
   subCallBack(time)
 }, "2")//.start()
+//Audio context error
 newPlayer.context._context.resume()
 loop.context._context.resume()
-
 
 export const playMusic = (startStep, endStep)=>{
   //This block is a key of sound delay. You should reduce the delay. Below is one of the solutions.
@@ -154,8 +154,7 @@ export const toNoteString=(num)=>{
   let noteNumber=num
   let noteSymbol = toToneLetter[noteNumber%12]
   let noteHeight = ~~(noteNumber/12)
-  let note = String(noteSymbol)+String(noteHeight)
-  return note
+  return String(noteSymbol)+String(noteHeight)
 }
 
 export const timeColoned =(sec)=>{
