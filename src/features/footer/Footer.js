@@ -26,15 +26,9 @@ let fontObject =(min,nom,max)=> {
   return result
 }
 
-let playStopLabel = (true) ? faPause : faPlay
-let globalPlayStopLabel =(true)? faPauseCircle:faPlayCircle
-
-
 const ChangeSpeed=()=>{
   const dispatch = useDispatch();
   const speed = useSelector((state) => state.counter.speed)
-
-
 
   return(
     <Row>

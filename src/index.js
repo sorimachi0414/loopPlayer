@@ -7,10 +7,7 @@ import {Provider, useSelector} from 'react-redux';
 import * as serviceWorker from './serviceWorker';
 import * as Tone from 'tone'
 import music from "./bensound-happyrock.mp3"
-import {
-  build,
-  shiftActivePosition, setIsPlay,
-} from "./features/counter/counterSlice";
+import {build,shiftActivePosition, setIsPlay,} from "./features/counter/counterSlice";
 // ///////////////////////////////////
 // Explain a method of play music
 // when onloaded cut whole audio buffer to "4n" length of buffers
@@ -20,7 +17,6 @@ import {
 
 //Tone.js------------------------------
 let musicLength=0
-
 let slicedBuffers=[]
 let slicedBuffers4=[]
 let slicedBuffers8=[]
@@ -83,7 +79,6 @@ newPlayer.loop = false;
 newPlayer.autostart = false;
 newPlayer.volume.value=-18
 
-
 export let synthScore=[]
 
 //get score from state
@@ -104,9 +99,6 @@ let reloadState=()=>{
 }
 store.subscribe(reloadState)
 
-//debug
-const debugOn = true
-
 newPlayer.loop=false
 
 //let loop = new Tone.Loop(()=>{},60/90)
@@ -118,114 +110,35 @@ let loop = new Tone.Loop((time)=>{
 }, "2").start()
 
 
-export const testRun = (startStep,endStep,isLoop=true,toEnd=false)=>{
-  //startStep<0 then play from activePosition
-  let a =Tone.now()
+export const playMusic = (startStep, endStep, isLoop=true, toEnd=false)=>{
+  //This block is a key of sound delay. You should reduce the delay. Below is one of the solutions.
+  if(endStep==startStep) return "Abnormal called"
 
-  if(endStep==startStep) return "abnormal called"
-
-  //Initiate
-  let bpm = Tone.Transport.bpm.value
-
-  //play sliced buffer
-  let playable=false
-
-  /*
-  if(toEnd==false) {
-    //section Play
-    //select sectioned buffer
-    if ((endStep - startStep) == 1) {
-      argBuffer = slicedBuffers
-    } else if ((endStep - startStep) == 4) {
-      argBuffer = slicedBuffers4
-    } else if ((endStep - startStep) == 8) {
-      argBuffer = slicedBuffers8
-    }
-    //set buffer to master
-    if(argBuffer.length > startStep){
-      playable=true
-      newPlayer.buffer = argBuffer[startStep]
-    }
-  }else {
-    //not sectioned play
-    playable=true
-    let startSec = startStep *60/bpm
-    startSec = (startSec<0) ? 0 : (startSec>originalBuffer.duration)? originalBuffer.duration : startSec
-    newPlayer.buffer = originalBuffer.slice(startSec,originalBuffer.duration)
-  }
-   */
-
-  if(debugOn){
-    let nowStep = startStep
-    if(true){
-      //0.005 object 0.05 now =>0.005 without constructor
-      //console.log(0,Tone.now()-a)
-      loop.cancel()
-      newPlayer.buffer = slicedBuffers[nowStep]
-      loop.interval=newPlayer.buffer.duration
-
-      /*
-      loop.callback=(time)=>{
-        console.log(4,Tone.now()-a)
-        newPlayer.start(time)
-        console.log(5,Tone.now()-a)
-
-        //if (isPlaySynth) synth.triggerAttackRelease(score[nowStep], 0.3, time);
-        //store.dispatch(shiftActivePosition(nowStep))
-        //次のステップをセット
-        nowStep = (nowStep+1<endStep) ?nowStep+1 : startStep;
-        newPlayer.buffer = slicedBuffers[nowStep]
-
-      }
- */
-      loop.start()
-      console.log(4,Tone.now()-a)
-
-      subCallBack=(time)=>{
-        if (isPlaySynth) synth.triggerAttackRelease(score[nowStep], 0.3, time);
-        store.dispatch(shiftActivePosition(nowStep))
-        //次のステップをセット
-        nowStep = (nowStep+1<endStep) ?nowStep+1 : startStep;
-        newPlayer.buffer = slicedBuffers[nowStep]
-      }
-
-      Tone.Transport.start()
-      return null
-    }
-
-  }
-
-  //player Play
-  if (playable) {
-    newPlayer.start(0)
-    newPlayer.loop = isLoop
-  } else {
-    newPlayer.stop(0)
-  }
-
-  //Not section play such as start from here to end
-  //play soft synth and progress seek bar
   let nowStep = startStep
-  Tone.Transport.cancel()
-  Tone.Transport.start()
-  Tone.Transport.scheduleRepeat((time) => {
-    //更新処理プログレスバーの更新処理
-    if (isPlaySynth) synth.triggerAttackRelease(score[nowStep], 0.3, time);
+  //0.005 object 0.05 now =>0.005 without constructor
+  loop.cancel()
+  newPlayer.buffer = slicedBuffers[nowStep]
+  loop.interval=newPlayer.buffer.duration
+  loop.start()
+
+  subCallBack=(time)=>{
+    let synthNoteDuration =0.3
+    if (isPlaySynth) synth.triggerAttackRelease(score[nowStep], synthNoteDuration, time);
     store.dispatch(shiftActivePosition(nowStep))
     //次のステップをセット
     nowStep = (nowStep+1<endStep) ?nowStep+1 : startStep;
-    if(!isLoop) Tone.Transport.cancel(0)
-  }, "4n", 0)
-  Tone.Transport.bpm.value=bpm
+    newPlayer.buffer = slicedBuffers[nowStep]
+  }
+  Tone.Transport.start()
 }
 
 export const resumeTest=()=>{
   if(newPlayer.state=="stopped"){
     Tone.Transport.start()
-    newPlayer.start()
+    newPlayer.start() //is this needed?
   }else {
     Tone.Transport.stop()
-    newPlayer.stop()
+    newPlayer.stop() //is this needed?
   }
 }
 
@@ -244,6 +157,7 @@ export const toNoteString=(num)=>{
 }
 
 export const timeColoned =(sec)=>{
+  // 105 -> 1:45
   let date = new Date(null);
   date.setSeconds(sec); // specify value for SECONDS here
   if(Number.isNaN(date.getTime())){
@@ -256,8 +170,6 @@ export const timeColoned =(sec)=>{
 //------------
 require('react-dom');
 window.React2 = require('react');
-console.log('reactcheck');
-console.log(window.React1 === window.React2);
 
 ReactDOM.render(
   <React.StrictMode>
